@@ -1653,14 +1653,27 @@
       renderMatchList();
     }
 
+    function classifyLiveStatus(rawStatus) {
+      const status = String(rawStatus ?? '').trim();
+      const normalized = status.toLocaleUpperCase('tr-TR');
+      if (/^(?:MS|FT|FULL\s?TIME|FINISHED|ENDED|BİTTİ|BITTI|AET|PEN(?:ALTIES)?|CANCELLED|POSTPONED|ABANDONED)(?:\b|\s|$)/u.test(normalized)) {
+        return { status: 'MS', isLive: false, minute: 90 };
+      }
+      if (/^(?:IY|İY|HT|CANLI|LIVE|IN\s+PLAY)$/u.test(normalized)) {
+        return { status: 'CANLI', isLive: true, minute: 45 };
+      }
+      const minuteMatch = normalized.match(/^(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]?$/u);
+      if (minuteMatch) {
+        const minute = Number(minuteMatch[1]) + Number(minuteMatch[2] || 0);
+        if (minute >= 1 && minute <= 130) return { status: 'CANLI', isLive: true, minute };
+      }
+      return { status: status || 'PLANLI', isLive: false, minute: 0 };
+    }
+
     function isMatchLive(m) {
       if (!m) return false;
-      if (m.isLive === true) return true;
-      if (typeof m.status === 'string') {
-        const s = m.status.toUpperCase();
-        return s === 'CANLI' || s.includes('CANLI') || s.includes("'") || s === 'LIVE' || s === 'IN PROGRESS';
-      }
-      return false;
+      const parsed = classifyLiveStatus(m.durum || m.status || m.dakika || '');
+      return parsed.isLive;
     }
 
     function isTurkishGiant(m) {
@@ -3008,14 +3021,12 @@
           mackMatches.forEach(mac => {
             const homeName = mac.evSahibi || mac.homeTeam || 'Ev Sahibi';
             const awayName = mac.deplasman || mac.awayTeam || 'Deplasman';
-            const statusRaw = String(mac.durum || mac.status || '');
-            const cleanSt = statusRaw.replace("'", '');
-            const isFinished = statusRaw === 'MS' || statusRaw === 'Bitti';
-            const isLive = !isFinished && statusRaw !== 'ERT' && statusRaw !== 'Kapatıldı' &&
-                           (statusRaw === 'IY' || statusRaw === 'İY' || !isNaN(parseInt(cleanSt, 10)));
+            const statusRaw = String(mac.durum || mac.status || '').trim();
+            const parsedStatus = classifyLiveStatus(statusRaw);
+            const isLive = parsedStatus.isLive;
             const homeScore = parseInt(mac.skorEv ?? mac.homeScore ?? '0', 10) || 0;
             const awayScore = parseInt(mac.skorDep ?? mac.awayScore ?? '0', 10) || 0;
-            const minute = parseInt(cleanSt, 10) || ((statusRaw === 'IY' || statusRaw === 'İY') ? 45 : (isFinished ? 90 : 0));
+            const minute = parsedStatus.minute;
             const leagueName = mac.lig || mac.league || 'MACKOLİK: FUTBOL';
             const lineups = buildMatchLineups(homeName, awayName);
 
@@ -3027,7 +3038,7 @@
               homeScore: homeScore,
               awayScore: awayScore,
               minute: minute,
-              status: isFinished ? 'MS' : (isLive ? 'CANLI' : (statusRaw || 'PLANLI')),
+              status: parsedStatus.status,
               isLive: isLive,
               stadium: `${homeName} Stadyumu`,
               referee: 'Hakem',
