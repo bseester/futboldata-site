@@ -1786,6 +1786,18 @@
       return text.includes('fenerbah') || text.includes('galatasaray') || text.includes('beşiktaş') || text.includes('besiktas') || text.includes('antalyaspor') || text.includes('trabzon') || !!m.isSakipSpecial;
     }
 
+    function isTurkishLeagueName(name) {
+      const normalized = String(name || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR');
+      return /turkiye|turkey|trendyol|super lig|tff|ziraat/.test(normalized);
+    }
+
+    function leagueSortPriority(name) {
+      const normalized = String(name || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR');
+      if (!isTurkishLeagueName(name)) return 2;
+      if (normalized.includes('super lig')) return 0;
+      return 1;
+    }
+
     function renderMatchList() {
       const container = document.getElementById('matchListContainer');
       container.innerHTML = '';
@@ -1802,18 +1814,6 @@
         return;
       }
 
-      // 🇹🇷 TÜRK DEVLERİ & ÖZEL MAÇLAR (FENERBAHÇE, GALATASARAY, BEŞİKTAŞ, ANTALYASPOR, TRABZONSPOR)
-      const sakipMatches = Object.values(matchesData).filter(m => {
-        if (!isTurkishGiant(m)) return false;
-        if (currentFilter === 'CANLI' && !isMatchLive(m)) return false;
-        if (currentFilter === 'BITEN' && m.status !== 'MS') return false;
-        return true;
-      });
-
-      if (sakipMatches.length > 0) {
-        appendLeagueBlock(container, '🇹🇷 CANLI & ÖZEL: SÜPER LİG DEVLERİ (FB, GS, BJK, ANTALYA)', sakipMatches, true, true);
-      }
-
       // Favoriler Grubu Varsa
       if (favoriteMatchIds.size > 0 && currentFilter !== 'BITEN') {
         const favMatches = Object.values(matchesData).filter(m => {
@@ -1826,7 +1826,6 @@
 
       const leagues = {};
       Object.values(matchesData).forEach(m => {
-        if (isTurkishGiant(m)) return; // Zaten en üstte Türk Devleri alanında var
         if (currentFilter === 'CANLI' && !isMatchLive(m)) return;
         if (currentFilter === 'BITEN' && m.status !== 'MS') return;
         if (currentFilter === 'FAVORİ' && !favoriteMatchIds.has(m.id)) return;
@@ -1834,9 +1833,11 @@
         leagues[m.league].push(m);
       });
 
-      Object.entries(leagues).forEach(([leagueName, matches]) => {
-        appendLeagueBlock(container, leagueName, matches, false, false);
-      });
+      Object.entries(leagues)
+        .sort(([a], [b]) => leagueSortPriority(a) - leagueSortPriority(b) || a.localeCompare(b, 'tr'))
+        .forEach(([leagueName, matches]) => {
+          appendLeagueBlock(container, leagueName, matches, false, isTurkishLeagueName(leagueName));
+        });
     }
 
     function appendLeagueBlock(container, leagueName, matches, isFavGroup, isSakipSpecial) {
@@ -1849,7 +1850,7 @@
             ? 'bg-gradient-to-r from-amber-600/30 via-red-600/20 to-zinc-900 border-amber-500/40 text-amber-300' 
             : (isFavGroup ? 'bg-amber-950/20 border-mackolik text-yellow-400' : 'bg-mackolik-league border-mackolik text-yellow-400')
         }">
-          <span class="flex items-center gap-1.5">${isSakipSpecial ? '👑' : '⚽'} ${leagueName}</span>
+          <span class="flex items-center gap-1.5">${isSakipSpecial ? '🇹🇷' : '⚽'} ${leagueName}</span>
           <span class="text-[10px] ${isSakipSpecial ? 'text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded' : 'text-zinc-400'}">${matches.length} Maç</span>
         </div>
       `;
