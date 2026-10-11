@@ -1,0 +1,3212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sakıpkolik - Canlı Skor, Fotoğraflı Grafikli Kadrolar, Transferler & Haberler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0d1117;
+      color: #e2e8f0;
+    }
+    .font-condensed { font-family: 'Roboto Condensed', sans-serif; }
+    
+    .bg-mackolik-header { background-color: #161c26; }
+    .bg-mackolik-sub { background-color: #1b2330; }
+    .bg-mackolik-card { background-color: #1e2736; }
+    .bg-mackolik-row:hover { background-color: #273448; }
+    .bg-mackolik-league { background-color: #131822; }
+    .border-mackolik { border-color: #2a364a; }
+    .text-mackolik-yellow { color: #facc15; }
+    .text-mackolik-green { color: #22c55e; }
+
+    /* 2D Taktik Yeşil Saha */
+    .pitch-grass {
+      background: repeating-linear-gradient(
+        0deg,
+        #115e3b,
+        #115e3b 40px,
+        #0e5334 40px,
+        #0e5334 80px
+      );
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.7);
+    }
+
+    @keyframes goalFlash {
+      0% { background-color: rgba(34, 197, 94, 0.5); }
+      100% { background-color: transparent; }
+    }
+    .flash-goal {
+      animation: goalFlash 3s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-yellow-400 selection:text-black">
+
+  <!-- ======================================================== -->
+  <!-- 🛑 SİTE KAPALI / BAKIM EKRANI (TEK BUTONLA KONTROL)      -->
+  <!-- ======================================================== -->
+  <div id="siteMaintenanceOverlay" class="fixed inset-0 z-[9999] bg-black text-white hidden flex-col items-center justify-center p-6 text-center select-none">
+    <div class="max-w-md w-full space-y-6 flex flex-col items-center">
+      <div id="siteMaintenanceEmoji" class="w-20 h-20 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-4xl shadow-2xl animate-pulse">
+        🚧
+      </div>
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-yellow-400 uppercase">
+          Site Kapalı
+        </h1>
+        <p id="siteMaintenanceMsg" class="text-base sm:text-lg font-bold text-zinc-300">
+          Sakıpbey çalısmadayız
+        </p>
+      </div>
+      <div class="p-3 bg-zinc-950 border border-zinc-900 rounded-xl text-xs text-zinc-500 font-mono">
+        Sistem geçici olarak bakıma alındı.
+      </div>
+    </div>
+  </div>
+
+  <div id="siteAppContainer">
+  <!-- ======================================================== -->
+  <!-- 1. HEADER (LOGO, MENÜ & KONTROLLER)                      -->
+  <!-- ======================================================== -->
+  <header class="bg-mackolik-header border-b border-mackolik sticky top-0 z-50 shadow-2xl">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14">
+      
+      <!-- Logo & Butonlar -->
+      <div class="flex items-center gap-3">
+        <a href="#" onclick="switchMainTab('matches')" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-500 flex items-center justify-center font-black text-black text-lg shadow-md group-hover:scale-105 transition">
+            ⚽
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xl sm:text-2xl font-black tracking-tighter leading-none">
+              <span class="text-white">SAKIP</span><span class="text-mackolik-yellow">KOLİK</span>
+            </span>
+            <span class="text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Canlı Skor & Transfer Portalı</span>
+          </div>
+        </a>
+
+        <!-- Ses Düdük Bildirimi -->
+        <button onclick="toggleSound()" id="soundBtn" class="flex items-center gap-1 text-[11px] bg-zinc-800/90 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 border border-zinc-700 transition">
+          <span id="soundText">🔔 Düdük: Açık</span>
+        </button>
+      </div>
+
+      <!-- Menü Sekmeleri -->
+      <nav class="flex items-center gap-1 sm:gap-2">
+        <button onclick="switchMainTab('matches')" id="nav-btn-matches" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition">
+          CANLI SKOR
+        </button>
+        <button onclick="switchMainTab('news')" id="nav-btn-news" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+          HABERLER
+        </button>
+        <button onclick="switchMainTab('transfers')" id="nav-btn-transfers" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+          TRANSFERLER
+        </button>
+        <button onclick="switchMainTab('fixtures')" id="nav-btn-fixtures" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
+          PUAN DURUMU
+        </button>
+      </nav>
+
+      <!-- Arama Kutusu -->
+      <div class="relative w-40 sm:w-64">
+        <input 
+          id="globalSearchInput"
+          type="text" 
+          placeholder="Oyuncu, takım, haber ara..." 
+          class="w-full bg-zinc-900 border border-mackolik rounded-lg px-3 py-1 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-yellow-400"
+          oninput="handleSearch(this.value)"
+        />
+        <div id="searchDropdown" class="absolute top-9 left-0 w-80 bg-zinc-900 border border-mackolik rounded-lg shadow-2xl hidden z-50 max-h-72 overflow-y-auto"></div>
+      </div>
+
+    </div>
+
+    <!-- 2. STICKY CANLI SKOR BANDI (TICKER) -->
+    <div class="bg-mackolik-sub border-t border-mackolik px-3 py-1.5 overflow-x-auto scrollbar-none">
+      <div id="scoreTickerBar" class="max-w-7xl mx-auto flex items-center gap-2 min-w-max">
+        <div class="flex items-center gap-1 text-[11px] font-black text-red-500 mr-2 uppercase tracking-wide">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> CANLI MAÇLAR
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. SON DAKİKA HABER BANDI (BREAKING NEWS TICKER) -->
+    <div id="breakingNewsContainer" class="bg-gradient-to-r from-red-950 via-zinc-950 to-red-950 border-y border-red-600/40 px-3 py-1.5 shadow-lg flex items-center justify-between text-xs transition-all duration-500">
+      <div class="max-w-7xl mx-auto w-full flex items-center gap-3">
+        <div class="flex items-center gap-1.5 bg-red-600 text-white font-black px-2.5 py-0.5 rounded shadow text-[10px] tracking-wider animate-pulse flex-shrink-0">
+          <span>🚨</span>
+          <span>SON DAKİKA</span>
+        </div>
+        <div id="breakingNewsContent" class="flex-1 overflow-hidden">
+          <a id="breakingNewsLink" href="#" target="_blank" class="text-zinc-200 hover:text-yellow-400 font-semibold truncate block transition">
+            <span id="breakingNewsSource" class="text-yellow-400 font-bold mr-1">[NTV Spor]</span>
+            <span id="breakingNewsTitle">Son dakika spor gelişmeleri anlık olarak takip ediliyor...</span>
+          </a>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 text-[10px] text-zinc-400 flex-shrink-0">
+          <span id="breakingNewsTime" class="font-mono">Şimdi</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. ANA İÇERİK                                             -->
+  <!-- ======================================================== -->
+  <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4">
+
+    <!-- ======================================================== -->
+    <!-- SEKME 1: CANLI SKOR & FOTOĞRAFLI GRAFİKLİ KADROLAR       -->
+    <!-- ======================================================== -->
+    <div id="tab-matches" class="space-y-4">
+      
+      <!-- Filtreler Barı -->
+      <div class="bg-mackolik-card border border-mackolik rounded-xl p-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <button onclick="filterMatches('ALL')" id="filter-ALL" class="filter-pill px-3 py-1 rounded font-black bg-yellow-400 text-black">
+            TÜMÜ (5)
+          </button>
+          <button onclick="filterMatches('CANLI')" id="filter-CANLI" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-red-500 mr-1 animate-pulse"></span>
+            CANLI (3)
+          </button>
+          <button onclick="filterMatches('FAVORİ')" id="filter-FAVORİ" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+            ⭐ FAVORİLER (<span id="count-favs" class="text-yellow-400">1</span>)
+          </button>
+        </div>
+
+        <div class="text-[11px] text-zinc-400 font-semibold flex items-center gap-2">
+          <span class="bg-zinc-900 px-2.5 py-0.5 rounded border border-zinc-800 text-zinc-300">📅 CANLI MAÇLAR</span>
+          <span id="scraperStatusBadge" class="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Canlı Veri Aktif
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- SOL: MAÇ LİSTESİ -->
+        <div class="lg:col-span-5 space-y-3">
+          <div id="matchListContainer" class="space-y-3"></div>
+        </div>
+
+        <!-- SAĞ: MAÇ DETAY MERKEZİ (FOTOĞRAFLI 2D KADROLAR) -->
+        <div class="lg:col-span-7 space-y-3">
+          <div class="bg-mackolik-card border border-mackolik rounded-xl p-4 shadow-2xl space-y-4">
+            
+            <!-- Maç Skor Hero -->
+            <div class="border-b border-mackolik pb-3">
+              <div class="flex items-center justify-between text-xs mb-2">
+                <div class="flex items-center gap-2">
+                  <span id="detailLeague" class="font-black text-yellow-400 uppercase tracking-wide">TÜRKİYE: Trendyol Süper Lig</span>
+                  <button onclick="switchMatchSubTab('standings')" title="Bu ligin puan durumunu aç" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-yellow-400 hover:text-black text-zinc-300 font-bold text-[10px] border border-zinc-700 transition flex items-center gap-1 shadow-sm">
+                    📊 Puan Durumu
+                  </button>
+                </div>
+                <span id="detailMinuteBadge" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black font-mono animate-pulse">74'</span>
+              </div>
+
+              <div class="flex items-center justify-between py-2">
+                <div class="w-2/5 text-center">
+                  <div class="text-base sm:text-lg font-black text-white" id="detailHomeTeam">Galatasaray</div>
+                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailHomeCoach" class="text-zinc-200 font-semibold">Okan Buruk</span></div>
+                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailHomeVal">€170.8M</span></div>
+                </div>
+
+                <div class="w-1/5 text-center">
+                  <div class="text-3xl sm:text-4xl font-black font-mono text-yellow-400 tracking-wider flex items-center justify-center gap-1">
+                    <span id="detailHomeScore">2</span>
+                    <span class="text-zinc-600">:</span>
+                    <span id="detailAwayScore">1</span>
+                  </div>
+                  <span id="detailHtScore" class="text-[10px] text-zinc-400 uppercase tracking-widest mt-0.5 block font-mono">İY: 1-1</span>
+                </div>
+
+                <div class="w-2/5 text-center">
+                  <div class="text-base sm:text-lg font-black text-white" id="detailAwayTeam">Fenerbahçe</div>
+                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailAwayCoach" class="text-zinc-200 font-semibold">Jose Mourinho</span></div>
+                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailAwayVal">€138.0M</span></div>
+                </div>
+              </div>
+
+              <div class="text-[11px] text-zinc-400 text-center flex items-center justify-center gap-4 pt-1">
+                <span>🏟️ <span id="detailStadium">RAMS Park</span></span>
+                <span>⚖️ <span id="detailReferee">Atilla Karaoğlan</span></span>
+              </div>
+            </div>
+
+            <!-- Sekme Başlıkları -->
+            <div class="flex items-center border-b border-mackolik text-xs font-black overflow-x-auto gap-1">
+              <button onclick="switchMatchSubTab('lineups')" id="subtab-btn-lineups" class="subtab-btn px-3 py-2 border-b-2 border-yellow-400 text-yellow-400">
+                🟢 MACKOLİK KADROSU
+              </button>
+              <button onclick="switchMatchSubTab('events')" id="subtab-btn-events" class="subtab-btn px-3 py-2 border-b-2 border-transparent text-zinc-400 hover:text-white">
+                CANLI ANLATIM
+              </button>
+              <button onclick="switchMatchSubTab('stats')" id="subtab-btn-stats" class="subtab-btn px-3 py-2 border-b-2 border-transparent text-zinc-400 hover:text-white">
+                İSTATİSTİKLER
+              </button>
+              <button onclick="switchMatchSubTab('standings')" id="subtab-btn-standings" class="subtab-btn px-3 py-2 border-b-2 border-transparent text-zinc-400 hover:text-white">
+                PUAN DURUMU
+              </button>
+              <button onclick="switchMatchSubTab('odds')" id="subtab-btn-odds" class="subtab-btn px-3 py-2 border-b-2 border-transparent text-zinc-400 hover:text-white">
+                ORANLAR
+              </button>
+            </div>
+
+            <!-- ALT SEKME 1: FOTOĞRAFLI 2D TAKTİK SAHA -->
+            <div id="subtab-content-lineups" class="space-y-4">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-white flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  22 Oyuncu Saha Dizilişi (Oyuncuya tıklayarak profilini açabilirsiniz)
+                </span>
+                <span class="text-[10px] bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded font-bold border border-emerald-500/30 flex items-center gap-1 shadow-sm">
+                  ⚡ MACKOLİK RESMİ KADRO ALTYAPISI
+                </span>
+              </div>
+
+              <!-- 2D SAHA PITCH -->
+              <div class="relative w-full h-[560px] rounded-2xl overflow-hidden pitch-grass border-2 border-emerald-950 shadow-2xl">
+                <svg class="absolute inset-0 w-full h-full stroke-white/40 fill-none" strokeWidth="2">
+                  <rect x="4%" y="3%" width="92%" height="94%" rx="8" />
+                  <line x1="4%" y1="50%" x2="96%" y2="50%" />
+                  <circle cx="50%" cy="50%" r="52" />
+                  <circle cx="50%" cy="50%" r="3" class="fill-white/70" />
+                  <rect x="25%" y="3%" width="50%" height="16%" />
+                  <rect x="25%" y="81%" width="50%" height="16%" />
+                </svg>
+
+                <div id="pitchPlayersContainer" class="absolute inset-0"></div>
+              </div>
+
+              <!-- Yedekler -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+                <div class="bg-mackolik-league p-3 rounded-xl border border-mackolik">
+                  <div class="font-black text-yellow-400 mb-1">GALATASARAY YEDEKLER</div>
+                  <div id="homeSubsList" class="space-y-1 text-zinc-300 text-[11px]"></div>
+                </div>
+                <div class="bg-mackolik-league p-3 rounded-xl border border-mackolik">
+                  <div class="font-black text-blue-400 mb-1">FENERBAHÇE YEDEKLER</div>
+                  <div id="awaySubsList" class="space-y-1 text-zinc-300 text-[11px]"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ALT SEKME 2: ANLATIM -->
+            <div id="subtab-content-events" class="hidden space-y-2">
+              <div id="detailEventsTimeline" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- ALT SEKME 3: İSTATİSTİKLER -->
+            <div id="subtab-content-stats" class="hidden space-y-3">
+              <div id="statsBarsContainer" class="space-y-3 pt-2 text-xs"></div>
+            </div>
+
+            <!-- ALT SEKME 4: PUAN DURUMU -->
+            <div id="subtab-content-standings" class="hidden space-y-2">
+              <!-- Lig başlığı + yükleniyor göstergesi -->
+              <div class="flex items-center justify-between px-1 pb-1 border-b border-zinc-800">
+                <div class="flex items-center gap-2">
+                  <span id="matchStandingsLeagueIcon" class="text-base">⚽</span>
+                  <span id="matchStandingsLeagueName" class="text-xs font-black text-yellow-400 uppercase tracking-wide">Puan Durumu</span>
+                </div>
+                <span id="matchStandingsLoader" class="text-[10px] text-zinc-500 font-mono hidden animate-pulse">Yükleniyor...</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-mackolik-league text-zinc-400 font-bold border-b border-mackolik">
+                    <tr>
+                      <th class="py-2 px-2 text-center">#</th>
+                      <th class="py-2 px-3">Takım</th>
+                      <th class="py-2 px-2 text-center">O</th>
+                      <th class="py-2 px-2 text-center">G</th>
+                      <th class="py-2 px-2 text-center">B</th>
+                      <th class="py-2 px-2 text-center">M</th>
+                      <th class="py-2 px-2 text-center">AV</th>
+                      <th class="py-2 px-2 text-center font-black text-yellow-400">P</th>
+                    </tr>
+                  </thead>
+                  <tbody id="standingsTableBody" class="divide-y divide-mackolik"></tbody>
+                </table>
+              </div>
+              <div id="matchStandingsEmpty" class="hidden text-center py-6 text-zinc-500 text-xs">
+                Bu lig için puan durumu verisi henüz mevcut değil.
+              </div>
+            </div>
+
+            <!-- ALT SEKME 5: ORANLAR -->
+            <div id="subtab-content-odds" class="hidden space-y-3">
+              <div class="grid grid-cols-3 gap-2.5 text-xs text-center">
+                <div class="bg-mackolik-league p-3 rounded-lg border border-mackolik">
+                  <span class="text-[10px] text-zinc-400 font-bold block mb-1">MS 1</span>
+                  <span id="odd-ms-1" class="text-sm font-black text-emerald-400">1.45</span>
+                </div>
+                <div class="bg-mackolik-league p-3 rounded-lg border border-mackolik">
+                  <span class="text-[10px] text-zinc-400 font-bold block mb-1">MS X</span>
+                  <span id="odd-ms-X" class="text-sm font-black text-zinc-200">4.20</span>
+                </div>
+                <div class="bg-mackolik-league p-3 rounded-lg border border-mackolik">
+                  <span class="text-[10px] text-zinc-400 font-bold block mb-1">MS 2</span>
+                  <span id="odd-ms-2" class="text-sm font-black text-red-400">6.50</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- SEKME 2: HABERLER MERKEZİ                                -->
+    <!-- ======================================================== -->
+    <div id="tab-news" class="hidden space-y-6">
+      <div class="flex items-center justify-between border-b border-mackolik pb-3">
+        <h2 class="text-xl font-black text-white flex items-center gap-2">📰 FUTBOL & TRANSFER HABERLERİ</h2>
+      </div>
+      <div id="heroNewsContainer" class="cursor-pointer group relative rounded-2xl overflow-hidden border border-mackolik bg-zinc-900 shadow-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-12">
+          <div class="md:col-span-7 h-64 md:h-96 relative overflow-hidden bg-zinc-950">
+            <img id="heroNewsImg" src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80" 
+                 onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800'"
+                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
+            <div class="absolute top-4 left-4">
+              <span id="heroNewsTag" class="bg-red-600 text-white text-[11px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow">
+                🔥 CANLI MANŞET
+              </span>
+            </div>
+          </div>
+          <div class="md:col-span-5 p-6 flex flex-col justify-between bg-mackolik-card">
+            <div>
+              <div id="heroNewsDate" class="text-xs text-yellow-400 font-bold mb-2">CANLI • Güncelleniyor...</div>
+              <h3 id="heroNewsTitle" class="text-xl sm:text-2xl font-black text-white leading-tight group-hover:text-yellow-400 transition">
+                Türkiye ve Dünya Spor Haberleri Yükleniyor...
+              </h3>
+              <p id="heroNewsSummary" class="text-xs sm:text-sm text-zinc-300 mt-3 line-clamp-4 leading-relaxed">
+                NTV Spor, Fanatik ve Fotomaç canlı RSS akışları taranıyor...
+              </p>
+            </div>
+            <div class="pt-4 border-t border-mackolik text-xs text-yellow-400 font-bold flex justify-between items-center">
+              <span id="heroNewsSource" class="bg-zinc-800 px-2 py-0.5 rounded text-zinc-300 border border-zinc-700">📡 CANLI RSS</span>
+              <a id="heroNewsLink" href="#" target="_blank" class="hover:underline flex items-center gap-1">Haberi Oku ➔</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="newsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- SEKME 3: TRANSFERMARKT + OYUNCU İLGİLİ HABERLERİ         -->
+    <!-- ======================================================== -->
+    <!-- ======================================================== -->
+    <!-- SEKME 3: CANLI TRANSFER BORSASI & OYUNCU ANALİZİ           -->
+    <!-- ======================================================== -->
+    <div id="tab-transfers" class="hidden space-y-6">
+      
+      <!-- 1. TRANSFER BORSASI METRİK KARTLARI -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-lg font-black flex-shrink-0">
+            💶
+          </div>
+          <div>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Toplam Harcama</span>
+            <div id="transferStatSpend" class="text-base sm:text-lg font-black text-white font-mono">€186.4M</div>
+            <span class="text-[9px] text-emerald-400 font-medium">Süper Lig 24/25</span>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-lg font-black flex-shrink-0">
+            ✍️
+          </div>
+          <div>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Resmi İmzalar</span>
+            <div id="transferStatDeals" class="text-base sm:text-lg font-black text-white font-mono">148 Transfer</div>
+            <span class="text-[9px] text-blue-400 font-medium">Kayıtlı & Onaylı</span>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center text-lg font-black flex-shrink-0">
+            🔥
+          </div>
+          <div>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Sıcak Dedikodular</span>
+            <div id="transferStatRumors" class="text-base sm:text-lg font-black text-white font-mono">42 Masada</div>
+            <span class="text-[9px] text-red-400 font-medium">Doğrulanmış Kaynak</span>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl p-4 shadow-xl flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 flex items-center justify-center text-lg font-black flex-shrink-0">
+            👑
+          </div>
+          <div>
+            <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Rekor Bonservis</span>
+            <div class="text-xs sm:text-sm font-black text-white truncate max-w-[140px]" title="Youssef En-Nesyri (€19.5M)">Youssef En-Nesyri</div>
+            <span class="text-[10px] font-mono font-bold text-yellow-400">€19.50M</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. TRANSFER MERKEZİ SEKME & ARAMA ÇUBUĞU -->
+      <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3 flex flex-col md:flex-row items-center justify-between gap-3 shadow-lg">
+        <div class="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          <button onclick="switchTransferSubTab('deals')" id="btn-trans-deals" class="trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-yellow-400 text-black shadow transition flex items-center gap-1.5 whitespace-nowrap">
+            ✍️ Resmileşen İmzalar
+          </button>
+          <button onclick="switchTransferSubTab('rumors')" id="btn-trans-rumors" class="trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap">
+            🔥 Sıcak Dedikodular
+          </button>
+          <button onclick="switchTransferSubTab('top')" id="btn-trans-top" class="trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap">
+            💎 En Değerli Oyuncular
+          </button>
+          <button onclick="switchTransferSubTab('player')" id="btn-trans-player" class="trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap">
+            📈 Oyuncu Değer Analizi
+          </button>
+        </div>
+
+        <div class="relative w-full md:w-64 flex-shrink-0">
+          <input 
+            type="text" 
+            id="transSearchInput" 
+            oninput="filterTransfers(this.value)" 
+            placeholder="Oyuncu veya kulüp ara..." 
+            class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400"
+          >
+          <span class="absolute right-3 top-2.5 text-zinc-500 text-xs">🔍</span>
+        </div>
+      </div>
+
+      <!-- 3A. RESMİLEŞEN İMZALAR ALANI -->
+      <div id="trans-content-deals" class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">✍️ Son Resmileşen Transferler</h3>
+            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">KAP & RESMİ BİLDİRİM</span>
+          </div>
+          <span id="transDealsCountBadge" class="text-xs text-zinc-500 font-mono">10 Transfer</span>
+        </div>
+        <div id="transDealsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"></div>
+      </div>
+
+      <!-- 3B. SICAK DEDİKODULAR ALANI -->
+      <div id="trans-content-rumors" class="hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">🔥 Sıcak Transfer Dedikoduları & Masadaki Teklifler</h3>
+            <span class="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-bold border border-red-500/20">CANLI DUYUMLAR</span>
+          </div>
+          <span class="text-xs text-zinc-500 font-mono">İhtimal Skorlu</span>
+        </div>
+        <div id="transRumorsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"></div>
+      </div>
+
+      <!-- 3C. EN DEĞERLİ OYUNCULAR ALANI -->
+      <div id="trans-content-top" class="hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-black text-white uppercase tracking-wider">💎 Süper Lig'in En Değerli 10 Oyuncusu</h3>
+            <span class="text-[10px] bg-yellow-400/10 text-yellow-400 px-2 py-0.5 rounded-full font-bold border border-yellow-400/20">TRANSFERMARKT VERİSİ</span>
+          </div>
+        </div>
+        <div class="bg-mackolik-card border border-mackolik rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-mackolik-league text-zinc-400 font-bold border-b border-mackolik">
+                <tr>
+                  <th class="py-3 px-3 text-center w-12">#</th>
+                  <th class="py-3 px-4">Oyuncu</th>
+                  <th class="py-3 px-3">Kulüp</th>
+                  <th class="py-3 px-3 text-center">Mevki</th>
+                  <th class="py-3 px-3 text-center">Yaş</th>
+                  <th class="py-3 px-4 text-right font-black text-yellow-400">Piyasa Değeri</th>
+                </tr>
+              </thead>
+              <tbody id="transTopPlayersBody" class="divide-y divide-mackolik"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3D. OYUNCU DETAY ANALİZİ & GRAFİK (MEVCUT GÜÇLÜ MODÜLÜN ZENGİNLEŞTİRİLMİŞ HALİ) -->
+      <div id="trans-content-player" class="hidden space-y-6">
+        
+        <!-- Hızlı Oyuncu Seçim Çubuğu -->
+        <div class="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div>
+            <h3 class="text-sm font-black text-white">Yıldız Oyuncu Analizi</h3>
+            <p class="text-[11px] text-zinc-400">Transfermarkt değer eğrisi ve kariyer grafiği</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="loadPlayerProfile('victor-osimhen')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🇳🇬</span> Victor Osimhen
+            </button>
+            <button onclick="loadPlayerProfile('arda-guler')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🇹🇷</span> Arda Güler
+            </button>
+            <button onclick="loadPlayerProfile('mauro-icardi')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🇦🇷</span> Mauro Icardi
+            </button>
+            <button onclick="loadPlayerProfile('kerem-akturkoglu')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🇵🇹</span> Kerem Aktürkoğlu
+            </button>
+            <button onclick="loadPlayerProfile('ferdi-kadioglu')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span> Ferdi Kadıoğlu
+            </button>
+            <button onclick="loadPlayerProfile('kenan-yildiz')" class="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white border border-zinc-700 flex items-center gap-1.5 transition">
+              <span>🇮🇹</span> Kenan Yıldız
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Sol: Biyografi ve Piyasa Değeri -->
+          <div class="lg:col-span-4 bg-mackolik-card border border-mackolik rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="relative">
+                <img id="transBioPhoto" src="" class="w-24 h-24 rounded-2xl object-cover border-2 border-yellow-400 shadow-md" />
+              </div>
+              <div>
+                <h3 id="transBioName" class="text-xl font-black text-white"></h3>
+                <p id="transBioClub" class="text-xs text-yellow-400 font-bold"></p>
+                <p id="transBioPos" class="text-xs text-zinc-400"></p>
+                <p id="transBioNat" class="text-[11px] text-zinc-500 mt-0.5"></p>
+                <span id="photoSourceBadge" class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono inline-block mt-1.5">
+                  TheSportsDB Canlı API
+                </span>
+              </div>
+            </div>
+
+            <div class="bg-mackolik-league p-4 rounded-xl border border-mackolik">
+              <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">GÜNCEL PİYASA DEĞERİ</span>
+              <div id="transBioValue" class="text-3xl font-black text-emerald-400 mt-1"></div>
+              <div class="text-[11px] text-zinc-400 mt-1 flex justify-between">
+                <span>Sözleşme Bitiş:</span>
+                <span id="transBioContract" class="text-white font-bold"></span>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">Transfer Geçmişi</h4>
+              <div id="transBioList" class="space-y-1.5 text-xs"></div>
+            </div>
+          </div>
+
+          <!-- Sağ: Piyasa Değeri Grafiği -->
+          <div class="lg:col-span-8 bg-mackolik-card border border-mackolik rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+            <div>
+              <h3 class="text-sm font-black text-white uppercase tracking-wider">📈 Tarihsel Piyasa Değeri Gelişimi</h3>
+              <p class="text-xs text-zinc-500 mb-4">Transfermarkt resmi değerleme tarihlerine göre oyuncunun kulüp bazlı değer artış grafiği</p>
+            </div>
+            <div class="h-64 w-full">
+              <canvas id="transChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oyuncu Haberleri -->
+        <div class="bg-mackolik-card border border-mackolik rounded-2xl p-6 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-mackolik pb-3">
+            <h3 class="text-base font-black text-yellow-400 flex items-center gap-2">
+              📰 BU OYUNCUYLA İLGİLİ SON HABERLER VE TRANSFER GELİŞMELERİ
+            </h3>
+            <span class="text-xs text-zinc-400">Sakıpkolik Haber Masası</span>
+          </div>
+          <div id="playerRelatedNewsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ======================================================== -->
+    <!-- SEKME 4: PUAN DURUMU & SIRALAMA (TÜM LİGLER)             -->
+    <!-- ======================================================== -->
+    <div id="tab-fixtures" class="hidden space-y-6">
+
+      <!-- LİG SEÇİCİ SEKMELER -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1">
+        <button onclick="loadFixtures('superlig')" id="fix-league-superlig" class="fix-league-btn px-4 py-2 rounded-xl text-xs font-black bg-yellow-400 text-black shadow transition flex items-center gap-1.5 whitespace-nowrap">
+          🇹🇷 Trendyol Süper Lig
+        </button>
+        <button onclick="loadFixtures('premier')" id="fix-league-premier" class="fix-league-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap">
+          🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League
+        </button>
+        <button onclick="loadFixtures('laliga')" id="fix-league-laliga" class="fix-league-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap">
+          🇪🇸 La Liga
+        </button>
+      </div>
+
+      <!-- 1. MODERN BAŞLIK & ÖZET İSTATİSTİK KARTLARI -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        
+        <!-- Lig Başlık Kartı -->
+        <div class="md:col-span-2 bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div id="standingsLeagueIcon" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-500 flex items-center justify-center font-black text-black text-2xl shadow-lg shadow-yellow-500/20">
+                🏆
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 id="standingsLeagueTitle" class="text-lg font-black text-white tracking-tight">TRENDYOL SÜPER LİG</h2>
+                  <span id="standingsSourceBadge" class="text-[10px] bg-yellow-400/10 text-yellow-400 px-2 py-0.5 rounded-full font-bold border border-yellow-400/30">MACKOLİK RESMİ</span>
+                </div>
+                <p id="standingsSeasonSubtitle" class="text-xs text-zinc-400 mt-0.5">2026-2027 Sezonu • Canlı Puan Tablosu</p>
+              </div>
+            </div>
+            <button onclick="loadFixtures(currentFixturesLeague)" title="Puan Durumunu Yenile" class="w-9 h-9 rounded-xl bg-zinc-800/80 hover:bg-yellow-400 hover:text-black text-zinc-300 flex items-center justify-center transition border border-zinc-700 shadow">
+              🔄
+            </button>
+          </div>
+
+          <div class="pt-4 flex flex-wrap items-center gap-3 text-xs text-zinc-400 border-t border-zinc-800/80 mt-4">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-sm shadow-yellow-400"></span> 1-2. Şampiyonlar Ligi</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-sm shadow-blue-400"></span> 3-4. Avrupa Ligi & Konferans</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500"></span> 16-19. Düşme Hattı</span>
+          </div>
+        </div>
+
+        <!-- Mini Kart 1: Lider -->
+        <div id="standingsLeaderCard" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-zinc-400">
+            <span class="font-bold uppercase tracking-wider">LİDER</span>
+            <div id="standingsLeaderLogo" class="w-7 h-7 flex items-center justify-center"></div>
+          </div>
+          <div class="my-2">
+            <div id="leaderTeamName" class="text-xl font-extrabold text-white truncate">Galatasaray</div>
+            <div id="leaderTeamPoints" class="text-2xl font-black text-yellow-400 font-mono mt-0.5">16 Puan</div>
+          </div>
+          <div id="leaderTeamRecord" class="text-[11px] text-zinc-400 font-mono">
+            7 Maç • 5G 1B 1M
+          </div>
+        </div>
+
+        <!-- Mini Kart 2: Sakıp Özel (Antalyaspor Durumu) -->
+        <div id="standingsSpecialCard" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-zinc-400">
+            <span class="font-bold uppercase tracking-wider">ANTALYASPOR</span>
+            <div id="standingsSpecialLogo" class="w-7 h-7 flex items-center justify-center"></div>
+          </div>
+          <div class="my-2">
+            <div id="antalyasporRankDisplay" class="text-xl font-extrabold text-white">Sıra: -</div>
+            <div id="antalyasporPointsDisplay" class="text-2xl font-black text-red-400 font-mono mt-0.5">- Puan</div>
+          </div>
+          <div id="antalyasporRecordDisplay" class="text-[11px] text-zinc-400 font-mono">
+            Trendyol Süper Lig
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 2. PUAN DURUMU FİLTRE & ARAMA ÇUBUĞU -->
+      <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="relative w-full sm:w-72">
+          <input 
+            type="text" 
+            id="standingsSearchInput" 
+            oninput="filterStandingsTable(this.value)"
+            placeholder="Takım ara (Örn: Galatasaray, Beşiktaş)..." 
+            class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400"
+          >
+          <span class="absolute right-3 top-2.5 text-zinc-500 text-xs">🔍</span>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto text-xs font-bold">
+          <button onclick="setStandingsZoneFilter('ALL')" id="btnZone-ALL" class="zone-filter-btn px-3 py-1.5 rounded-lg bg-yellow-400 text-black transition whitespace-nowrap">
+            Tüm Takımlar (19)
+          </button>
+          <button onclick="setStandingsZoneFilter('EUROPE')" id="btnZone-EUROPE" class="zone-filter-btn px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition whitespace-nowrap">
+            Avrupa Potası (İlk 4)
+          </button>
+          <button onclick="setStandingsZoneFilter('RELEGATION')" id="btnZone-RELEGATION" class="zone-filter-btn px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition whitespace-nowrap">
+            Düşme Hattı (Son 4)
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. PUAN DURUMU MODERN TABLOSU -->
+      <div class="bg-mackolik-card border border-mackolik rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-zinc-900/90 text-zinc-400 text-[11px] font-black uppercase tracking-wider border-b border-zinc-800 select-none">
+                <th class="py-3.5 px-3 text-center w-12">#</th>
+                <th class="py-3.5 px-4 text-left">TAKIM</th>
+                <th class="py-3.5 px-3 text-center w-12" title="Oynanan Maç">O</th>
+                <th class="py-3.5 px-3 text-center w-12 text-emerald-400" title="Galibiyet">G</th>
+                <th class="py-3.5 px-3 text-center w-12 text-zinc-300" title="Beraberlik">B</th>
+                <th class="py-3.5 px-3 text-center w-12 text-red-400" title="Mağlubiyet">M</th>
+                <th class="py-3.5 px-3 text-center w-12 hidden sm:table-cell text-zinc-400" title="Attığı Gol">AG</th>
+                <th class="py-3.5 px-3 text-center w-12 hidden sm:table-cell text-zinc-400" title="Yediği Gol">YG</th>
+                <th class="py-3.5 px-3 text-center w-14 text-zinc-300 font-mono" title="Averaj">AV</th>
+                <th class="py-3.5 px-4 text-center w-16 font-black text-yellow-400 text-sm font-mono" title="Puan">P</th>
+              </tr>
+            </thead>
+            <tbody id="fixtureStandingsBody" class="divide-y divide-zinc-800/40 font-mono">
+              <tr>
+                <td colspan="10" class="py-8 text-center text-zinc-500 font-sans text-xs">Puan durumu yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ======================================================== -->
+  <!-- 4. HABER DETAY MODALI                                     -->
+  <!-- ======================================================== -->
+  <!-- ======================================================== -->
+  <!-- 4. HABER DETAY MODALI (SİTE İÇİNDE OKUMA MERKEZİ)          -->
+  <!-- ======================================================== -->
+  <div id="newsModal" onclick="handleNewsModalBackdrop(event)" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-mackolik-card border border-mackolik max-w-2xl w-full rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Görsel ve Üst Bar -->
+      <div class="relative h-64 sm:h-80 w-full overflow-hidden flex-shrink-0 bg-zinc-950">
+        <img id="modalNewsImg" src="" onerror="this.src='https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800'" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-mackolik-card via-transparent to-black/40"></div>
+        
+        <span id="modalNewsCategory" class="absolute bottom-3 left-4 bg-yellow-400 text-black text-[11px] font-black px-2.5 py-1 rounded shadow">
+          SPOR
+        </span>
+        
+        <button onclick="closeNewsModal()" class="absolute top-3 right-3 bg-black/70 hover:bg-red-600 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition shadow-lg">
+          ✕
+        </button>
+      </div>
+
+      <!-- Okuma Alanı -->
+      <div class="p-5 sm:p-7 space-y-4 overflow-y-auto flex-1">
+        <div class="text-xs text-zinc-400 flex items-center gap-2">
+          <span id="modalNewsSource" class="text-yellow-400 font-bold bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800"></span>
+          <span>•</span>
+          <span id="modalNewsDate" class="text-zinc-300"></span>
+          <span>•</span>
+          <span id="modalNewsRead" class="text-zinc-400">📖 2 dk okuma</span>
+        </div>
+
+        <h3 id="modalNewsTitle" class="text-xl sm:text-2xl font-black text-white leading-snug"></h3>
+        
+        <div id="modalNewsContent" class="text-sm sm:text-base text-zinc-300 leading-relaxed space-y-3 font-normal pt-2 border-t border-mackolik"></div>
+      </div>
+
+      <!-- Alt Bar -->
+      <div class="p-4 bg-mackolik-sub border-t border-mackolik flex items-center justify-between flex-shrink-0">
+        <span class="text-xs text-zinc-400 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Sakıpkolik Dahili Haber Okuyucu</span>
+        </span>
+        <button onclick="closeNewsModal()" class="px-5 py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-xs rounded-lg transition shadow">
+          Kapat
+        </button>
+      </div>
+
+    </div>
+  </div> <!-- /siteAppContainer -->
+
+  <!-- ======================================================== -->
+  <!-- 5. JAVASCRIPT ETKİLEŞİM & SSE                            -->
+  <!-- ======================================================== -->
+  <script>
+    // 🛑 SİTEYİ TEK BUTONLA KAPATMA / BAKIM MODU (SUNUCU API'Sİ İLE SENKRONİZE)
+    let isSiteShutdown = false;
+    let siteShutdownMessage = 'Sakıpbey çalısmadayız';
+    let siteShutdownEmoji = '🚧';
+
+    function applySiteShutdownUI() {
+      const overlay = document.getElementById('siteMaintenanceOverlay');
+      const appContainer = document.getElementById('siteAppContainer');
+      const msgEl = document.getElementById('siteMaintenanceMsg');
+      const emojiEl = document.getElementById('siteMaintenanceEmoji');
+      if (!overlay || !appContainer) return;
+
+      if (msgEl) {
+        msgEl.innerText = siteShutdownMessage || 'Sakıpbey çalısmadayız';
+      }
+      if (emojiEl) {
+        emojiEl.innerText = siteShutdownEmoji || '🚧';
+      }
+
+      if (isSiteShutdown) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        appContainer.style.display = 'none';
+      } else {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        appContainer.style.display = 'block';
+      }
+    }
+
+    async function fetchServerSiteStatus() {
+      try {
+        const resp = await fetch('/api/site-status?_=' + Date.now(), { cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          isSiteShutdown = !!data.isClosed;
+          if (data.message) siteShutdownMessage = data.message;
+          if (data.emoji) siteShutdownEmoji = data.emoji;
+          applySiteShutdownUI();
+        }
+      } catch(e) {}
+    }
+
+    // Sayfa açılır açılmaz sunucudan durumu çek
+    fetchServerSiteStatus();
+    // Her 5 saniyede bir sunucu durumunu kontrol et (uzaktan başka siteden kapatılınca anında kapansın)
+    setInterval(fetchServerSiteStatus, 5000);
+
+    // Favorileri Tarayıcı Hafızasından (localStorage) Yükle
+    function loadSavedFavorites() {
+      try {
+        const saved = localStorage.getItem('sakipkolik_fav_matches');
+        if (saved !== null) {
+          return new Set(JSON.parse(saved));
+        }
+      } catch(e) {}
+      // İlk kez giren kullanıcı için varsayılan favori
+      return new Set(['derby-gs-fb', 'antalya-rize']);
+    }
+
+    let matchesData = {};
+    let newsData = [];
+    let standingsData = [];
+    let favoriteMatchIds = loadSavedFavorites();
+    let currentFilter = 'ALL';
+    let soundEnabled = true;
+    let chartInstance = null;
+    let activeMatchId = 'derby-gs-fb';
+
+    // ===================================================
+    // 📸 TheSportsDB Oyuncu Fotoğraf Önbelleği
+    // Fotoğraflar doğrudan tarayıcıdan API'ye isteniyor.
+    // ===================================================
+    const playerPhotoCache = {};  // { "Victor Osimhen": "https://...jpg" }
+
+    async function fetchPlayerPhotoFromAPI(playerName) {
+      if (playerPhotoCache[playerName]) return playerPhotoCache[playerName];
+      try {
+        const encodedName = encodeURIComponent(playerName);
+        const resp = await fetch(
+          `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodedName}`
+        );
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (data && data.player && data.player.length > 0) {
+          const p = data.player[0];
+          // TheSportsDB alanları: strThumb (küçük), strCutout (PNG şeffaf), strFanart1
+          const photoUrl = p.strCutout || p.strThumb || p.strFanart1 || null;
+          if (photoUrl) {
+            playerPhotoCache[playerName] = photoUrl;
+            return photoUrl;
+          }
+        }
+      } catch (e) { /* Sessizce geç */ }
+      return null;
+    }
+
+    // Sahadaki TÜM oyuncuların fotoğraflarını arka planda önceden yükle
+    async function prefetchLineupPhotos(lineups) {
+      if (!lineups || !lineups.home || !lineups.away) return;
+      const allPlayers = [...(lineups.home.players || []), ...(lineups.away.players || [])];
+      const uniqueNames = [...new Set(allPlayers.map(p => p.name).filter(Boolean))];
+      // Paralel olarak hepsini çek (rate limit için 150ms aralıklı)
+      for (const name of uniqueNames) {
+        fetchPlayerPhotoFromAPI(name); // fire-and-forget
+        await new Promise(r => setTimeout(r, 150));
+      }
+    }
+
+    function saveFavoritesToStorage() {
+      try {
+        localStorage.setItem('sakipkolik_fav_matches', JSON.stringify([...favoriteMatchIds]));
+      } catch(e) {}
+    }
+
+    // Ses Bildirimi
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundText').innerText = soundEnabled ? '🔔 Düdük: Açık' : '🔕 Düdük: Kapalı';
+      document.getElementById('soundBtn').classList.toggle('text-yellow-400', soundEnabled);
+    }
+
+    function playWhistleSound() {
+      if (!soundEnabled) return;
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1400, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch(e) {}
+    }
+
+    // Ana Sekme Değişimi
+    let allFixturesData = [];
+
+    function switchMainTab(t) {
+      ['matches', 'news', 'transfers', 'fixtures'].forEach(tab => {
+        const el = document.getElementById(`tab-${tab}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      document.querySelectorAll('.main-nav-btn').forEach(b => {
+        b.className = 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition';
+      });
+
+      const tabEl = document.getElementById(`tab-${t}`);
+      if (tabEl) tabEl.classList.remove('hidden');
+      const btnEl = document.getElementById(`nav-btn-${t}`);
+      if (btnEl) btnEl.className = 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition';
+
+      if (t === 'transfers') {
+        loadTransfersHub();
+        loadPlayerProfile('victor-osimhen');
+      }
+      if (t === 'fixtures')  loadFixtures();
+      if (t === 'news')      loadNews();
+    }
+
+    let currentFixturesLeague = 'superlig';
+
+    const LEAGUE_META = {
+      'superlig': {
+        title: 'TRENDYOL SÜPER LİG',
+        icon: '🏆',
+        source: 'MACKOLİK RESMİ',
+        subtitle: '2026-2027 Sezonu • Canlı Puan Tablosu',
+        specialLabel: 'ANTALYASPOR',
+        specialIcon: '🦂',
+        specialSub: 'Trendyol Süper Lig'
+      },
+      'premier': {
+        title: 'PREMIER LEAGUE',
+        icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        source: 'PREMIER LEAGUE',
+        subtitle: '2024-2025 Sezonu • Canlı Puan Tablosu',
+        specialLabel: 'MANCHESTER CITY',
+        specialIcon: '⚽',
+        specialSub: 'Premier League'
+      },
+      'laliga': {
+        title: 'LA LIGA',
+        icon: '🇪🇸',
+        source: 'LA LIGA EA SPORTS',
+        subtitle: '2024-2025 Sezonu • Canlı Puan Tablosu',
+        specialLabel: 'REAL MADRID',
+        specialIcon: '👑',
+        specialSub: 'La Liga'
+      }
+    };
+
+    // =====================================================
+    // 📂 PUAN DURUMU YÜKLEME (ÇOKLU LİG DESTEĞİ)
+    // =====================================================
+    async function loadFixtures(league = 'superlig') {
+      currentFixturesLeague = league;
+
+      // Sekme butonlarını güncelle
+      ['superlig', 'premier', 'laliga'].forEach(l => {
+        const btn = document.getElementById(`fix-league-${l}`);
+        if (btn) {
+          if (l === league) {
+            btn.className = 'fix-league-btn px-4 py-2 rounded-xl text-xs font-black bg-yellow-400 text-black shadow transition flex items-center gap-1.5 whitespace-nowrap';
+          } else {
+            btn.className = 'fix-league-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap';
+          }
+        }
+      });
+
+      // Başlıkları güncelle
+      const meta = LEAGUE_META[league] || LEAGUE_META['superlig'];
+      const titleEl = document.getElementById('standingsLeagueTitle');
+      const badgeEl = document.getElementById('standingsSourceBadge');
+      const subEl   = document.getElementById('standingsSeasonSubtitle');
+      const iconEl  = document.getElementById('standingsLeagueIcon');
+
+      if (titleEl) titleEl.innerText = meta.title;
+      if (badgeEl) badgeEl.innerText = meta.source;
+      if (subEl)   subEl.innerText   = meta.subtitle;
+      if (iconEl)  iconEl.innerText  = meta.icon;
+
+      try {
+        const res = await fetch(`/api/standings?league=${league}`);
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          renderStandingsTable(json.data);
+          return;
+        }
+
+        // Fallback: /api/fixtures üzerinden al
+        const fRes = await fetch('/api/fixtures');
+        const fJson = await fRes.json();
+        if (fJson.success && fJson.standings && fJson.standings.length > 0) {
+          renderStandingsTable(fJson.standings);
+        }
+      } catch(e) {
+        console.error('Puan durumu yüklenemedi:', e);
+      }
+    }
+
+    let allStandingsList = [];
+    let currentStandingsZone = 'ALL';
+    let standingsSearchQuery = '';
+
+    function updateStandingsLeaderCards(standings) {
+      if (!standings || standings.length === 0) return;
+      const leader = standings[0];
+      if (leader) {
+        document.getElementById('leaderTeamName').innerText = leader.team;
+        document.getElementById('leaderTeamPoints').innerText = `${leader.points} Puan`;
+        document.getElementById('leaderTeamRecord').innerText = `${leader.played} Maç • ${leader.win}G ${leader.draw}B ${leader.loss}M (AV: ${leader.gd > 0 ? '+' + leader.gd : leader.gd})`;
+        const leaderLogoEl = document.getElementById('standingsLeaderLogo');
+        if (leaderLogoEl) leaderLogoEl.innerHTML = renderTeamLogoHtml(leader.team, 'w-7 h-7');
+      }
+
+      const meta = LEAGUE_META[currentFixturesLeague] || LEAGUE_META['superlig'];
+      const specialHeader = document.querySelector('#standingsSpecialCard span.font-bold');
+      if (specialHeader) specialHeader.innerText = meta.specialLabel;
+
+      // Özel takım bulma
+      let targetTeam = null;
+      if (currentFixturesLeague === 'superlig') {
+        targetTeam = standings.find(s => s.team && s.team.includes('Antalya')) || standings[1];
+      } else if (currentFixturesLeague === 'premier') {
+        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('manchester city')) || standings[1];
+      } else if (currentFixturesLeague === 'laliga') {
+        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('real madrid')) || standings[1];
+      }
+
+      if (targetTeam) {
+        document.getElementById('antalyasporRankDisplay').innerText = `${targetTeam.rank}. Sıra`;
+        document.getElementById('antalyasporPointsDisplay').innerText = `${targetTeam.points} Puan`;
+        document.getElementById('antalyasporRecordDisplay').innerText = `${targetTeam.played} Maç • ${targetTeam.win}G ${targetTeam.draw}B ${targetTeam.loss}M (AV: ${targetTeam.gd > 0 ? '+' + targetTeam.gd : targetTeam.gd})`;
+        const specialLogoEl = document.getElementById('standingsSpecialLogo');
+        if (specialLogoEl) specialLogoEl.innerHTML = renderTeamLogoHtml(targetTeam.team, 'w-7 h-7');
+      }
+    }
+
+    function setStandingsZoneFilter(zone) {
+      currentStandingsZone = zone;
+      ['ALL', 'EUROPE', 'RELEGATION'].forEach(z => {
+        const btn = document.getElementById(`btnZone-${z}`);
+        if (btn) {
+          if (z === zone) {
+            btn.className = 'zone-filter-btn px-3 py-1.5 rounded-lg bg-yellow-400 text-black font-bold transition whitespace-nowrap shadow';
+          } else {
+            btn.className = 'zone-filter-btn px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold transition whitespace-nowrap';
+          }
+        }
+      });
+      applyStandingsFilters();
+    }
+
+    function filterStandingsTable(query) {
+      standingsSearchQuery = (query || '').toLowerCase().trim();
+      applyStandingsFilters();
+    }
+
+    function applyStandingsFilters() {
+      let filtered = [...allStandingsList];
+
+      if (currentStandingsZone === 'EUROPE') {
+        filtered = filtered.filter(s => s.rank <= 4);
+      } else if (currentStandingsZone === 'RELEGATION') {
+        filtered = filtered.filter(s => s.rank >= Math.max(1, allStandingsList.length - 3));
+      }
+
+      if (standingsSearchQuery) {
+        filtered = filtered.filter(s => s.team && s.team.toLowerCase().includes(standingsSearchQuery));
+      }
+
+      renderStandingsRows(filtered);
+    }
+
+    function renderStandingsTable(standings) {
+      allStandingsList = standings || [];
+      updateStandingsLeaderCards(allStandingsList);
+      applyStandingsFilters();
+    }
+
+    // =============================================================
+    // 🛡️ TAKIM LOGOLARI MOTORU (CDN & GERÇEK AMBLEMLER)
+    // =============================================================
+    function getTeamLogoUrl(teamName) {
+      if (!teamName) return null;
+      const t = teamName.toLowerCase().trim();
+
+      // 🇹🇷 Türkiye Süper Lig
+      if (t.includes('galatasaray')) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Galatasaray_Sports_Club_Logo.png/120px-Galatasaray_Sports_Club_Logo.png';
+      if (t.includes('fenerbah')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/8/86/Fenerbah%C3%A7e_SK.png/120px-Fenerbah%C3%A7e_SK.png';
+      if (t.includes('beşiktaş') || t.includes('besiktas')) return 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Be%C5%9Fikta%C5%9F_JK.png/120px-Be%C5%9Fikta%C5%9F_JK.png';
+      if (t.includes('trabzon')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/a/ab/Trabzonspor_Amblemi.png/120px-Trabzonspor_Amblemi.png';
+      if (t.includes('antalya')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/b/b9/Antalyaspor_logo.png/120px-Antalyaspor_logo.png';
+      if (t.includes('başakşehir') || t.includes('basaksehir')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/c/cd/%C4%B0stanbul_Ba%C5%9Fak%C5%9Fehir_FK.png/120px-%C4%B0stanbul_Ba%C5%9Fak%C5%9Fehir_FK.png';
+      if (t.includes('konya')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/1/1a/Konyaspor_Logo.png/120px-Konyaspor_Logo.png';
+      if (t.includes('samsun')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/0/07/Samsunspor_logo.png/120px-Samsunspor_logo.png';
+      if (t.includes('eyüp') || t.includes('eyup')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/a/a9/Ey%C3%BCpspor_Logo.png/120px-Ey%C3%BCpspor_Logo.png';
+      if (t.includes('göztepe') || t.includes('goztepe')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/5/52/G%C3%B6ztepe_Spor_Kul%C3%BCb%C3%BC_Logo.png/120px-G%C3%B6ztepe_Spor_Kul%C3%BCb%C3%BC_Logo.png';
+      if (t.includes('sivas')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/8/80/Sivasspor.png/120px-Sivasspor.png';
+      if (t.includes('alanya')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/5/56/Alanyaspor_logo.png/120px-Alanyaspor_logo.png';
+      if (t.includes('rize')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/2/23/%C3%87aykur_Rizespor_Logo.png/120px-%C3%87aykur_Rizespor_Logo.png';
+      if (t.includes('kasımpaşa') || t.includes('kasimpasa')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/b/ba/Kas%C4%B1mpa%C5%9Fa_SK_Logo.png/120px-Kas%C4%B1mpa%C5%9Fa_SK_Logo.png';
+      if (t.includes('kayseri')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/3/30/Kayserispor_logo.png/120px-Kayserispor_logo.png';
+      if (t.includes('gaziantep')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/1/12/Gaziantep_FK.png/120px-Gaziantep_FK.png';
+      if (t.includes('bodrum')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/4/4b/Bodrum_FK_logo.png/120px-Bodrum_FK_logo.png';
+      if (t.includes('hatay')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/c/c5/Hatayspor_Logo.png/120px-Hatayspor_Logo.png';
+      if (t.includes('adana demir')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/b/be/Adana_Demirspor_Logo.png/120px-Adana_Demirspor_Logo.png';
+      if (t.includes('amed')) return 'https://upload.wikimedia.org/wikipedia/tr/thumb/c/c0/Amed_SFK_Logo.png/120px-Amed_SFK_Logo.png';
+
+      // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League
+      if (t.includes('liverpool')) return 'https://crests.football-data.org/64.png';
+      if (t.includes('arsenal')) return 'https://crests.football-data.org/57.png';
+      if (t.includes('manchester city') || t.includes('man city')) return 'https://crests.football-data.org/65.png';
+      if (t.includes('chelsea')) return 'https://crests.football-data.org/61.png';
+      if (t.includes('newcastle')) return 'https://crests.football-data.org/67.png';
+      if (t.includes('aston villa')) return 'https://crests.football-data.org/58.png';
+      if (t.includes('tottenham') || t.includes('spurs')) return 'https://crests.football-data.org/73.png';
+      if (t.includes('manchester united') || t.includes('man utd')) return 'https://crests.football-data.org/66.png';
+      if (t.includes('brighton')) return 'https://crests.football-data.org/397.png';
+      if (t.includes('fulham')) return 'https://crests.football-data.org/63.png';
+      if (t.includes('brentford')) return 'https://crests.football-data.org/402.png';
+      if (t.includes('west ham')) return 'https://crests.football-data.org/563.png';
+      if (t.includes('crystal palace')) return 'https://crests.football-data.org/354.png';
+      if (t.includes('bournemouth')) return 'https://crests.football-data.org/1044.png';
+      if (t.includes('everton')) return 'https://crests.football-data.org/62.png';
+      if (t.includes('nottingham')) return 'https://crests.football-data.org/351.png';
+      if (t.includes('wolverhampton') || t.includes('wolves')) return 'https://crests.football-data.org/76.png';
+      if (t.includes('leicester')) return 'https://crests.football-data.org/338.png';
+      if (t.includes('ipswich')) return 'https://crests.football-data.org/349.png';
+      if (t.includes('southampton')) return 'https://crests.football-data.org/340.png';
+
+      // 🇪🇸 La Liga
+      if (t.includes('real madrid')) return 'https://crests.football-data.org/86.png';
+      if (t.includes('barcelona')) return 'https://crests.football-data.org/81.png';
+      if (t.includes('atletico madrid') || t.includes('atlético')) return 'https://crests.football-data.org/78.png';
+      if (t.includes('athletic bilbao') || t.includes('athletic club')) return 'https://crests.football-data.org/77.png';
+      if (t.includes('villarreal')) return 'https://crests.football-data.org/94.png';
+      if (t.includes('real sociedad')) return 'https://crests.football-data.org/92.png';
+      if (t.includes('real betis') || t.includes('betis')) return 'https://crests.football-data.org/90.png';
+      if (t.includes('sevilla')) return 'https://crests.football-data.org/559.png';
+      if (t.includes('girona')) return 'https://crests.football-data.org/298.png';
+      if (t.includes('celta vigo') || t.includes('celta')) return 'https://crests.football-data.org/558.png';
+      if (t.includes('osasuna')) return 'https://crests.football-data.org/79.png';
+      if (t.includes('mallorca')) return 'https://crests.football-data.org/89.png';
+      if (t.includes('rayo vallecano') || t.includes('rayo')) return 'https://crests.football-data.org/87.png';
+      if (t.includes('valencia')) return 'https://crests.football-data.org/95.png';
+      if (t.includes('getafe')) return 'https://crests.football-data.org/82.png';
+      if (t.includes('alaves')) return 'https://crests.football-data.org/263.png';
+      if (t.includes('espanyol')) return 'https://crests.football-data.org/80.png';
+      if (t.includes('las palmas')) return 'https://crests.football-data.org/275.png';
+      if (t.includes('leganes')) return 'https://crests.football-data.org/745.png';
+      if (t.includes('valladolid')) return 'https://crests.football-data.org/250.png';
+
+      return null;
+    }
+
+    function renderTeamLogoHtml(teamName, sizeClass = 'w-5 h-5') {
+      const url = getTeamLogoUrl(teamName);
+      const initials = (teamName || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      if (!url) {
+        return `<span class="${sizeClass} rounded-full bg-zinc-800 text-yellow-400 font-black text-[9px] flex items-center justify-center border border-zinc-700 flex-shrink-0 shadow-sm">${initials}</span>`;
+      }
+      return `<img src="${url}" alt="${teamName}" class="${sizeClass} object-contain flex-shrink-0 filter drop-shadow-sm" onerror="this.onerror=null; this.outerHTML='<span class=\\'${sizeClass} rounded-full bg-zinc-800 text-yellow-400 font-black text-[9px] flex items-center justify-center border border-zinc-700 flex-shrink-0\\'>${initials}</span>'" loading="lazy" />`;
+    }
+
+    function renderStandingsRows(standings) {
+      const tbody = document.getElementById('fixtureStandingsBody');
+      if (!tbody) return;
+
+      if (!standings || standings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-zinc-500 font-sans text-xs">Aramaya uygun takım bulunamadı.</td></tr>`;
+        return;
+      }
+
+      const totalTeams = allStandingsList.length || 19;
+
+      tbody.innerHTML = standings.map(s => {
+        const isCL = s.rank <= 2;
+        const isEL = s.rank === 3 || s.rank === 4;
+        const isRelegation = s.rank >= totalTeams - 3;
+        const isGalatasaray = s.team === 'Galatasaray';
+        const isAntalyaspor = s.team && s.team.includes('Antalya');
+
+        let rankBadgeClass = 'text-zinc-400 bg-zinc-900 border-zinc-800';
+        let rowClass = 'hover:bg-zinc-800/60 transition';
+
+        if (isCL) {
+          rankBadgeClass = 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30 font-black';
+        } else if (isEL) {
+          rankBadgeClass = 'text-blue-400 bg-blue-400/10 border-blue-400/30 font-bold';
+        } else if (isRelegation) {
+          rankBadgeClass = 'text-red-400 bg-red-500/10 border-red-500/30 font-bold';
+        }
+
+        if (isGalatasaray) {
+          rowClass = 'bg-yellow-400/10 hover:bg-yellow-400/20 font-bold border-l-4 border-l-yellow-400 transition';
+        } else if (isAntalyaspor) {
+          rowClass = 'bg-red-500/10 hover:bg-red-500/20 font-bold border-l-4 border-l-red-500 transition';
+        }
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-3 px-3 text-center">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono border ${rankBadgeClass}">
+                ${s.rank}
+              </span>
+            </td>
+            <td class="py-3 px-4 font-sans font-bold text-white text-xs sm:text-sm">
+              <div class="flex items-center gap-2.5">
+                ${renderTeamLogoHtml(s.team, 'w-6 h-6')}
+                ${isGalatasaray ? '<span class="text-yellow-400">👑</span>' : isAntalyaspor ? '<span class="text-red-400">🦂</span>' : ''}
+                <span class="${isGalatasaray ? 'text-yellow-300 font-extrabold' : ''}">${s.team}</span>
+              </div>
+            </td>
+            <td class="py-3 px-3 text-center text-zinc-300 font-bold">${s.played}</td>
+            <td class="py-3 px-3 text-center text-emerald-400 font-bold">${s.win}</td>
+            <td class="py-3 px-3 text-center text-zinc-400">${s.draw}</td>
+            <td class="py-3 px-3 text-center text-red-400">${s.loss}</td>
+            <td class="py-3 px-3 text-center text-zinc-400 hidden sm:table-cell">${s.gf ?? '-'}</td>
+            <td class="py-3 px-3 text-center text-zinc-400 hidden sm:table-cell">${s.ga ?? '-'}</td>
+            <td class="py-3 px-3 text-center font-bold ${s.gd > 0 ? 'text-emerald-400' : s.gd < 0 ? 'text-red-400' : 'text-zinc-400'}">
+              ${s.gd > 0 ? '+' + s.gd : s.gd}
+            </td>
+            <td class="py-3 px-4 text-center font-black text-yellow-400 text-sm sm:text-base bg-zinc-950/40">
+              ${s.points}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =============================================================
+    // 📊 MAÇA ÖZEL LİG PUAN DURUMU
+    // Maça tıklandığında o maçın ligine ait tabloyu yükler
+    // =============================================================
+
+    // Lig adı → simge + API endpoint eşlemesi
+    const LEAGUE_STANDINGS_MAP = {
+      // Türkiye Süper Lig
+      'süper lig':     { icon: '🇹🇷', api: '/api/standings?league=superlig', label: 'Türkiye Süper Lig' },
+      'super lig':     { icon: '🇹🇷', api: '/api/standings?league=superlig', label: 'Türkiye Süper Lig' },
+      'trendyol':      { icon: '🇹🇷', api: '/api/standings?league=superlig', label: 'Türkiye Süper Lig' },
+      'türkiye':       { icon: '🇹🇷', api: '/api/standings?league=superlig', label: 'Türkiye Süper Lig' },
+      // İngiltere Premier Lig
+      'premier league':{ icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', api: '/api/standings?league=premier', label: 'Premier Lig' },
+      'premier lig':   { icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', api: '/api/standings?league=premier', label: 'Premier Lig' },
+      // İspanya La Liga
+      'la liga':       { icon: '🇪🇸', api: '/api/standings?league=laliga', label: 'La Liga' },
+      'laliga':        { icon: '🇪🇸', api: '/api/standings?league=laliga', label: 'La Liga' },
+      // Almanya Bundesliga
+      'bundesliga':    { icon: '🇩🇪', api: null, label: 'Bundesliga' },
+      // İtalya Serie A
+      'serie a':       { icon: '🇮🇹', api: null, label: 'Serie A' },
+      // Fransa Ligue 1
+      'ligue 1':       { icon: '🇫🇷', api: null, label: 'Ligue 1' },
+      // UEFA Şampiyonlar Ligi
+      'şampiyonlar':   { icon: '🏆', api: null, label: 'Şampiyonlar Ligi' },
+      'champions':     { icon: '🏆', api: null, label: 'Şampiyonlar Ligi' },
+      // UEFA Avrupa Ligi
+      'avrupa ligi':   { icon: '🌍', api: null, label: 'UEFA Avrupa Ligi' },
+      'europa':        { icon: '🌍', api: null, label: 'UEFA Avrupa Ligi' },
+    };
+
+    let _lastMatchStandingsId = null;
+
+    async function loadMatchStandings(match) {
+      if (!match) return;
+      const leagueRaw = (match.league || '').toLowerCase();
+      const homeTeam = (match.homeTeam || '').toLowerCase();
+      const awayTeam = (match.awayTeam || '').toLowerCase();
+
+      // Lig tespiti
+      let detected = null;
+      for (const [key, cfg] of Object.entries(LEAGUE_STANDINGS_MAP)) {
+        if (leagueRaw.includes(key)) { detected = cfg; break; }
+      }
+
+      // Başlık güncelle
+      const nameEl  = document.getElementById('matchStandingsLeagueName');
+      const iconEl  = document.getElementById('matchStandingsLeagueIcon');
+      const loader  = document.getElementById('matchStandingsLoader');
+      const emptyEl = document.getElementById('matchStandingsEmpty');
+      const tbody   = document.getElementById('standingsTableBody');
+
+      if (nameEl) nameEl.innerText = detected ? detected.label : (match.league || 'Puan Durumu');
+      if (iconEl) iconEl.innerText = detected ? detected.icon : '⚽';
+      if (emptyEl) emptyEl.classList.add('hidden');
+
+      // Daha önce bu maç için yükledik mi?
+      if (_lastMatchStandingsId === match.id) return;
+      _lastMatchStandingsId = match.id;
+
+      // Süper Lig → mevcut API'den çek
+      if (detected && detected.api) {
+        if (loader) loader.classList.remove('hidden');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-zinc-500 text-xs animate-pulse">Puan durumu yükleniyor...</td></tr>`;
+        try {
+          const res = await fetch(detected.api);
+          const json = await res.json();
+          const rows = (json.success && json.data) ? json.data : (json.standings || []);
+          if (rows && rows.length > 0) {
+            renderMatchStandingsRows(rows, homeTeam, awayTeam);
+          } else {
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            if (tbody) tbody.innerHTML = '';
+          }
+        } catch(e) {
+          if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-red-400 text-xs">Veri alınamadı.</td></tr>`;
+        } finally {
+          if (loader) loader.classList.add('hidden');
+        }
+        return;
+      }
+
+      // Diğer ligler → yalnızca bilgi mesajı göster (api yoksa)
+      if (tbody) tbody.innerHTML = '';
+      if (emptyEl) {
+        emptyEl.innerText = `${detected ? detected.label : match.league} için puan durumu verisi şu an desteklenmiyor.`;
+        emptyEl.classList.remove('hidden');
+      }
+    }
+
+    function renderMatchStandingsRows(standings, homeTeamLower, awayTeamLower) {
+      const tbody = document.getElementById('standingsTableBody');
+      if (!tbody) return;
+
+      const total = standings.length;
+      tbody.innerHTML = standings.map(s => {
+        const teamLower = (s.team || '').toLowerCase();
+        const isHome = homeTeamLower && teamLower.includes(homeTeamLower.split(' ')[0]);
+        const isAway = awayTeamLower && teamLower.includes(awayTeamLower.split(' ')[0]);
+        const isCL = s.rank <= 2;
+        const isEL = s.rank === 3 || s.rank === 4;
+        const isRel = s.rank >= total - 3;
+
+        let rankClass = 'text-zinc-400 bg-zinc-900 border-zinc-700';
+        if (isCL)  rankClass = 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30 font-black';
+        if (isEL)  rankClass = 'text-blue-400 bg-blue-400/10 border-blue-400/30 font-bold';
+        if (isRel) rankClass = 'text-red-400 bg-red-500/10 border-red-500/30';
+
+        let rowClass = 'hover:bg-zinc-800/50 transition';
+        let badge = '';
+        if (isHome) {
+          rowClass = 'bg-yellow-400/10 border-l-4 border-l-yellow-400 hover:bg-yellow-400/20 transition font-bold';
+          badge = '<span class="ml-1 text-[9px] bg-yellow-400 text-black px-1.5 py-0.5 rounded font-black">EV</span>';
+        } else if (isAway) {
+          rowClass = 'bg-blue-500/10 border-l-4 border-l-blue-400 hover:bg-blue-500/20 transition font-bold';
+          badge = '<span class="ml-1 text-[9px] bg-blue-400 text-black px-1.5 py-0.5 rounded font-black">DEP</span>';
+        }
+
+        const gd = s.gd ?? ((s.gf ?? 0) - (s.ga ?? 0));
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-2 px-2 text-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-mono border ${rankClass}">${s.rank}</span>
+            </td>
+            <td class="py-2 px-3 font-bold text-white text-xs whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                ${renderTeamLogoHtml(s.team, 'w-5 h-5')}
+                <span>${s.team}</span>${badge}
+              </div>
+            </td>
+            <td class="py-2 px-2 text-center text-zinc-400 text-xs">${s.played}</td>
+            <td class="py-2 px-2 text-center text-emerald-400 text-xs">${s.win}</td>
+            <td class="py-2 px-2 text-center text-zinc-400 text-xs">${s.draw}</td>
+            <td class="py-2 px-2 text-center text-red-400 text-xs">${s.loss}</td>
+            <td class="py-2 px-2 text-center font-bold text-xs ${gd > 0 ? 'text-emerald-400' : gd < 0 ? 'text-red-400' : 'text-zinc-500'}">${gd > 0 ? '+' + gd : gd}</td>
+            <td class="py-2 px-2 text-center font-black text-yellow-400 text-sm bg-zinc-950/30">${s.points}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+
+    let currentFixtureStatusFilter = 'ALL';
+    let fixtureDisplayLimit = 60;
+    let currentRenderedFixtures = [];
+
+    function setFixtureStatusFilter(status) {
+      currentFixtureStatusFilter = status;
+      fixtureDisplayLimit = 60; // reset limit
+
+      // Buton renklerini güncelle
+      document.querySelectorAll('.fix-filter-btn').forEach(btn => {
+        btn.className = 'fix-filter-btn px-2.5 py-1 rounded font-bold bg-zinc-900 text-zinc-300 hover:bg-zinc-800 transition';
+      });
+      const activeBtn = document.getElementById(`fix-filter-${status}`);
+      if (activeBtn) {
+        activeBtn.className = 'fix-filter-btn px-2.5 py-1 rounded font-bold bg-yellow-400 text-black transition';
+      }
+
+      filterFixtures();
+    }
+
+    function filterFixtures() {
+      const q = (document.getElementById('fixtureTeamFilter').value || '').toLowerCase().trim();
+      let filtered = allFixturesData;
+
+      // Takım araması
+      if (q) {
+        filtered = filtered.filter(m =>
+          (m.homeTeam && m.homeTeam.toLowerCase().includes(q)) ||
+          (m.awayTeam && m.awayTeam.toLowerCase().includes(q))
+        );
+      }
+
+      // Durum filtresi
+      if (currentFixtureStatusFilter === 'CANLI') {
+        filtered = filtered.filter(m => m.status === 'CANLI' || m.minute === 'İY' || m.minute === 'IY' || (m.status && m.status.includes("'")));
+      } else if (currentFixtureStatusFilter === 'MS') {
+        filtered = filtered.filter(m => m.status === 'MS' || m.status === 'Bitti');
+      } else if (currentFixtureStatusFilter === 'PLANLI') {
+        filtered = filtered.filter(m => m.status !== 'MS' && m.status !== 'CANLI' && m.status !== 'Bitti' && (!m.status || !m.status.includes("'")));
+      }
+
+      renderFixtureMatches(filtered);
+    }
+
+    function loadMoreFixtures() {
+      fixtureDisplayLimit += 60;
+      renderFixtureMatches(currentRenderedFixtures, true);
+    }
+
+    function renderFixtureMatches(matches, append = false) {
+      currentRenderedFixtures = matches;
+      const countEl = document.getElementById('fixtureMatchCount');
+      if (countEl) countEl.innerText = `${matches.length} Maç`;
+
+      // Sakıp özel fikstür (Galatasaray & Antalyaspor)
+      const sakipMatches = allFixturesData.filter(m =>
+        (m.homeTeam && (m.homeTeam.includes('Galatasaray') || m.homeTeam.includes('Antalyaspor'))) ||
+        (m.awayTeam && (m.awayTeam.includes('Galatasaray') || m.awayTeam.includes('Antalyaspor')))
+      );
+      const sakipEl = document.getElementById('sakipFixtureList');
+      if (sakipEl) {
+        sakipEl.innerHTML = sakipMatches.length === 0
+          ? '<div class="text-xs text-zinc-500 p-2">Bugün Galatasaray veya Antalyaspor maçı bulunmuyor.</div>'
+          : sakipMatches.map(m => renderFixtureRow(m, true)).join('');
+      }
+
+      // Tüm maçlar (Sayfalanmış / Performanslı Liste)
+      const container = document.getElementById('fixtureMatchList');
+      if (!container) return;
+
+      if (matches.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-zinc-500 space-y-2">
+            <span class="text-3xl block">🔍</span>
+            <div class="text-sm font-bold text-zinc-400">Seçilen kriterde maç bulunamadı.</div>
+            <div class="text-xs text-zinc-600">Filtreleri veya takım arama kutusunu temizleyebilirsiniz.</div>
+          </div>
+        `;
+        const showingEl = document.getElementById('fixtureShowingCount');
+        if (showingEl) showingEl.innerText = '0 maç';
+        const moreBtn = document.getElementById('fixtureLoadMoreBtn');
+        if (moreBtn) moreBtn.classList.add('hidden');
+        return;
+      }
+
+      const visibleMatches = matches.slice(0, fixtureDisplayLimit);
+      container.innerHTML = visibleMatches.map(m => renderFixtureRow(m, false)).join('');
+
+      // Alt sayaç ve Daha Fazla butonu
+      const showingEl = document.getElementById('fixtureShowingCount');
+      if (showingEl) {
+        showingEl.innerText = `${matches.length} maçtan ${visibleMatches.length} tanesi gösteriliyor`;
+      }
+      const moreBtn = document.getElementById('fixtureLoadMoreBtn');
+      if (moreBtn) {
+        if (matches.length > fixtureDisplayLimit) {
+          moreBtn.classList.remove('hidden');
+          moreBtn.innerText = `Daha Fazla Göster (+${Math.min(60, matches.length - fixtureDisplayLimit)}) ➔`;
+        } else {
+          moreBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderFixtureRow(m, isSpecialBox) {
+      const isGs = (m.homeTeam && m.homeTeam.includes('Galatasaray')) || (m.awayTeam && m.awayTeam.includes('Galatasaray'));
+      const isAnt = (m.homeTeam && m.homeTeam.includes('Antalyaspor')) || (m.awayTeam && m.awayTeam.includes('Antalyaspor'));
+      const isLive = m.status === 'CANLI' || (m.minute && (m.minute === 'İY' || m.minute === 'IY' || m.minute.includes("'")));
+      const isMS = m.status === 'MS' || m.status === 'Bitti';
+
+      let statusBadgeHtml = '';
+      if (isLive) {
+        statusBadgeHtml = `
+          <span class="inline-flex items-center gap-1 bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black font-mono text-[11px] animate-pulse">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            ${m.minute || 'CANLI'}
+          </span>
+        `;
+      } else if (isMS) {
+        statusBadgeHtml = `<span class="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded font-black text-[10px] tracking-wider">MS</span>`;
+      } else {
+        statusBadgeHtml = `<span class="text-zinc-400 font-mono text-xs font-bold">${m.time || '19:00'}</span>`;
+      }
+
+      let scoreDisplay = '';
+      if (m.score) {
+        scoreDisplay = `<span class="font-mono font-black text-sm px-2.5 py-0.5 rounded ${isLive ? 'bg-yellow-400 text-black shadow' : 'bg-zinc-900 text-white border border-zinc-800'}">${m.score}</span>`;
+      } else {
+        scoreDisplay = `<span class="text-zinc-600 font-mono text-xs">v</span>`;
+      }
+
+      // Takım isim renkleri
+      const homeColor = m.homeTeam && m.homeTeam.includes('Galatasaray') ? 'text-yellow-400 font-black' : (m.homeTeam && m.homeTeam.includes('Antalyaspor') ? 'text-red-400 font-black' : 'text-zinc-200');
+      const awayColor = m.awayTeam && m.awayTeam.includes('Galatasaray') ? 'text-yellow-400 font-black' : (m.awayTeam && m.awayTeam.includes('Antalyaspor') ? 'text-red-400 font-black' : 'text-zinc-200');
+
+      return `
+        <div class="grid grid-cols-12 items-center px-4 py-2.5 text-xs hover:bg-zinc-800/40 transition gap-2 ${isGs ? 'bg-yellow-400/5' : isAnt ? 'bg-red-950/20' : ''}">
+          <!-- Saat / Durum -->
+          <div class="col-span-3 sm:col-span-2 flex items-center gap-1.5">
+            ${statusBadgeHtml}
+          </div>
+
+          <!-- Ev Sahibi -->
+          <div class="col-span-4 sm:col-span-4 text-right pr-2 truncate">
+            <span class="${homeColor} truncate block hover:text-white transition cursor-pointer" title="${m.homeTeam}">
+              ${isGs && m.homeTeam.includes('Galatasaray') ? '👑 ' : isAnt && m.homeTeam.includes('Antalyaspor') ? '🦂 ' : ''}${m.homeTeam}
+            </span>
+          </div>
+
+          <!-- Skor / v -->
+          <div class="col-span-2 sm:col-span-2 flex items-center justify-center">
+            ${scoreDisplay}
+          </div>
+
+          <!-- Deplasman -->
+          <div class="col-span-3 sm:col-span-4 pl-2 truncate">
+            <span class="${awayColor} truncate block hover:text-white transition cursor-pointer" title="${m.awayTeam}">
+              ${m.awayTeam}${isGs && m.awayTeam.includes('Galatasaray') ? ' 👑' : isAnt && m.awayTeam.includes('Antalyaspor') ? ' 🦂' : ''}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function switchMatchSubTab(sub) {
+      const tabs = ['lineups', 'events', 'stats', 'standings', 'odds'];
+      tabs.forEach(t => {
+        document.getElementById(`subtab-content-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`subtab-btn-${t}`);
+        if (btn) btn.className = 'subtab-btn px-3 py-2 border-b-2 border-transparent text-zinc-400 hover:text-white';
+      });
+
+      document.getElementById(`subtab-content-${sub}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`subtab-btn-${sub}`);
+      if (activeBtn) activeBtn.className = 'subtab-btn px-3 py-2 border-b-2 border-yellow-400 text-yellow-400';
+
+      // Puan durumu sekmesine geçildiğinde aktif maçın ligini yükle
+      if (sub === 'standings') {
+        const m = matchesData[activeMatchId];
+        if (m) loadMatchStandings(m);
+      }
+    }
+
+    function toggleFavorite(e, matchId) {
+      e.stopPropagation();
+      if (favoriteMatchIds.has(matchId)) {
+        favoriteMatchIds.delete(matchId);
+      } else {
+        favoriteMatchIds.add(matchId);
+      }
+      saveFavoritesToStorage();
+      document.getElementById('count-favs').innerText = favoriteMatchIds.size;
+      renderMatchList();
+    }
+
+    function filterMatches(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.className = 'filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700';
+      });
+      document.getElementById(`filter-${f}`).className = 'filter-pill px-3 py-1 rounded font-black bg-yellow-400 text-black';
+      renderMatchList();
+    }
+
+    function isMatchLive(m) {
+      if (!m) return false;
+      if (m.isLive === true) return true;
+      if (typeof m.status === 'string') {
+        const s = m.status.toUpperCase();
+        return s === 'CANLI' || s.includes('CANLI') || s.includes("'") || s === 'LIVE' || s === 'IN PROGRESS';
+      }
+      return false;
+    }
+
+    function isTurkishGiant(m) {
+      if (!m) return false;
+      const text = `${m.homeTeam || ''} ${m.awayTeam || ''}`.toLowerCase();
+      return text.includes('fenerbah') || text.includes('galatasaray') || text.includes('beşiktaş') || text.includes('besiktas') || text.includes('antalyaspor') || text.includes('trabzon') || !!m.isSakipSpecial;
+    }
+
+    function renderMatchList() {
+      const container = document.getElementById('matchListContainer');
+      container.innerHTML = '';
+
+      // 🇹🇷 TÜRK DEVLERİ & ÖZEL MAÇLAR (FENERBAHÇE, GALATASARAY, BEŞİKTAŞ, ANTALYASPOR, TRABZONSPOR)
+      const sakipMatches = Object.values(matchesData).filter(m => {
+        if (!isTurkishGiant(m)) return false;
+        if (currentFilter === 'CANLI' && !isMatchLive(m)) return false;
+        if (currentFilter === 'BITEN' && m.status !== 'MS') return false;
+        return true;
+      });
+
+      if (sakipMatches.length > 0) {
+        appendLeagueBlock(container, '🇹🇷 CANLI & ÖZEL: SÜPER LİG DEVLERİ (FB, GS, BJK, ANTALYA)', sakipMatches, true, true);
+      }
+
+      // Favoriler Grubu Varsa
+      if (favoriteMatchIds.size > 0 && currentFilter !== 'BITEN') {
+        const favMatches = Object.values(matchesData).filter(m => {
+          if (!favoriteMatchIds.has(m.id) || isTurkishGiant(m)) return false;
+          if (currentFilter === 'CANLI' && !isMatchLive(m)) return false;
+          return true;
+        });
+        if (favMatches.length > 0) appendLeagueBlock(container, '⭐ DİĞER FAVORİLERİM', favMatches, true, false);
+      }
+
+      const leagues = {};
+      Object.values(matchesData).forEach(m => {
+        if (isTurkishGiant(m)) return; // Zaten en üstte Türk Devleri alanında var
+        if (currentFilter === 'CANLI' && !isMatchLive(m)) return;
+        if (currentFilter === 'BITEN' && m.status !== 'MS') return;
+        if (currentFilter === 'FAVORİ' && !favoriteMatchIds.has(m.id)) return;
+        if (!leagues[m.league]) leagues[m.league] = [];
+        leagues[m.league].push(m);
+      });
+
+      Object.entries(leagues).forEach(([leagueName, matches]) => {
+        appendLeagueBlock(container, leagueName, matches, false, false);
+      });
+    }
+
+    function appendLeagueBlock(container, leagueName, matches, isFavGroup, isSakipSpecial) {
+      const leagueDiv = document.createElement('div');
+      leagueDiv.className = `bg-mackolik-card border ${isSakipSpecial ? 'border-amber-500/60 shadow-lg shadow-amber-500/10' : 'border-mackolik'} rounded-xl overflow-hidden shadow mb-3`;
+
+      leagueDiv.innerHTML = `
+        <div class="px-3 py-2 border-b flex items-center justify-between text-xs font-black ${
+          isSakipSpecial 
+            ? 'bg-gradient-to-r from-amber-600/30 via-red-600/20 to-zinc-900 border-amber-500/40 text-amber-300' 
+            : (isFavGroup ? 'bg-amber-950/20 border-mackolik text-yellow-400' : 'bg-mackolik-league border-mackolik text-yellow-400')
+        }">
+          <span class="flex items-center gap-1.5">${isSakipSpecial ? '👑' : '⚽'} ${leagueName}</span>
+          <span class="text-[10px] ${isSakipSpecial ? 'text-amber-300 font-bold bg-amber-500/20 px-2 py-0.5 rounded' : 'text-zinc-400'}">${matches.length} Maç</span>
+        </div>
+      `;
+
+      const table = document.createElement('div');
+      table.className = 'divide-y divide-mackolik text-xs';
+
+      matches.forEach(m => {
+        const isSelected = m.id === activeMatchId;
+        const isLive = isMatchLive(m);
+        const isFav = favoriteMatchIds.has(m.id);
+
+        const row = document.createElement('div');
+        row.id = `match-row-${m.id}`;
+        row.onclick = () => selectActiveMatch(m.id);
+        row.className = `bg-mackolik-row p-2.5 flex items-center justify-between cursor-pointer transition ${
+          isSelected ? 'bg-zinc-800 border-l-4 border-yellow-400' : ''
+        }`;
+
+        row.innerHTML = `
+          <button onclick="toggleFavorite(event, '${m.id}')" class="text-sm px-1.5 hover:scale-125 transition ${isFav ? 'text-yellow-400' : 'text-zinc-600 hover:text-zinc-400'}">
+            ★
+          </button>
+          <div class="w-10 text-center font-bold">
+            ${isLive 
+              ? `<span class="text-red-400 font-mono text-[11px] animate-pulse">${m.minute}'</span>` 
+              : `<span class="text-zinc-400 font-mono text-[10px]">${m.status}</span>`}
+          </div>
+          <div class="flex-1 px-2.5">
+            <div class="flex items-center justify-between font-semibold py-0.5">
+              <span class="text-zinc-100 ${m.homeScore > m.awayScore ? 'font-black text-yellow-400' : ''}">${m.homeTeam}</span>
+              <span class="font-mono font-bold text-white text-sm bg-zinc-900/90 px-2 py-0.5 rounded border border-zinc-800">${m.homeScore}</span>
+            </div>
+            <div class="flex items-center justify-between font-semibold py-0.5">
+              <span class="text-zinc-100 ${m.awayScore > m.homeScore ? 'font-black text-yellow-400' : ''}">${m.awayTeam}</span>
+              <span class="font-mono font-bold text-white text-sm bg-zinc-900/90 px-2 py-0.5 rounded border border-zinc-800">${m.awayScore}</span>
+            </div>
+          </div>
+          <div class="w-10 text-center text-[10px] text-zinc-500 font-mono">
+            ${m.htScore || '-'}
+          </div>
+          <div class="hidden sm:flex items-center gap-1">
+            <span class="bg-zinc-900 text-[10px] font-bold text-zinc-300 px-1.5 py-1 rounded border border-zinc-800">${m.odds ? m.odds['1'] || '-' : '-'}</span>
+            <span class="bg-zinc-900 text-[10px] font-bold text-zinc-300 px-1.5 py-1 rounded border border-zinc-800">${m.odds ? m.odds['X'] || '-' : '-'}</span>
+            <span class="bg-zinc-900 text-[10px] font-bold text-zinc-300 px-1.5 py-1 rounded border border-zinc-800">${m.odds ? m.odds['2'] || '-' : '-'}</span>
+          </div>
+        `;
+        table.appendChild(row);
+      });
+
+      leagueDiv.appendChild(table);
+      container.appendChild(leagueDiv);
+    }
+
+    // ── SOFASCORE KADRO SİSTEMİ (Tarayıcı Proxy Yaklaşımı) ──────────────────
+    // ── 🟢 MACKOLİK RESMİ KADRO ALTYAPISI ENTEGRASYONU ──────────────────
+    async function fetchMackolikLineups(matchId, match) {
+      if (!matchId) return null;
+
+      try {
+        const homeParam = encodeURIComponent(match?.homeTeam || '');
+        const awayParam = encodeURIComponent(match?.awayTeam || '');
+        const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}`, { cache: 'no-store' });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (data && data.lineups) {
+          return data.lineups;
+        }
+      } catch (e) {
+        console.warn('[Mackolik] Kadro getirme hatası:', e);
+      }
+      return null;
+    }
+
+    function selectActiveMatch(matchId) {
+      activeMatchId = matchId;
+      _lastMatchStandingsId = null; // Standings cache'ini sıfırla — yeni maçta tekrar yüklensin
+      const m = matchesData[matchId];
+      if (!m) return;
+
+      document.getElementById('detailLeague').innerText = m.league;
+      document.getElementById('detailMinuteBadge').innerText = isMatchLive(m) ? `${m.minute}' CANLI` : m.status;
+      document.getElementById('detailHomeTeam').innerText = m.homeTeam;
+      document.getElementById('detailAwayTeam').innerText = m.awayTeam;
+      document.getElementById('detailHomeScore').innerText = m.homeScore;
+      document.getElementById('detailAwayScore').innerText = m.awayScore;
+      document.getElementById('detailHtScore').innerText = `İY: ${m.htScore || '-'}`;
+      document.getElementById('detailHomeCoach').innerText = m.homeManager || 'Teknik Direktör';
+      document.getElementById('detailAwayCoach').innerText = m.awayManager || 'Teknik Direktör';
+      document.getElementById('detailHomeVal').innerText = m.homeMarketValueTotal || '€100M';
+      document.getElementById('detailAwayVal').innerText = m.awayMarketValueTotal || '€100M';
+      document.getElementById('detailStadium').innerText = m.stadium || 'Stadyum';
+      document.getElementById('detailReferee').innerText = m.referee || 'Hakem';
+
+      if (m.odds) {
+        document.getElementById('odd-ms-1').innerText = m.odds['1'] || '-';
+        document.getElementById('odd-ms-X').innerText = m.odds['X'] || '-';
+        document.getElementById('odd-ms-2').innerText = m.odds['2'] || '-';
+      }
+
+      renderEventsTimeline(m.events);
+      renderStatsBars(m.stats);
+
+      // 1. Mackolik Kadro Entegrasyonu:
+      const lineupsTab = document.getElementById('subtab-btn-lineups');
+      if (m.lineups && m.lineups.home && m.lineups.home.players && m.lineups.home.players.length > 0) {
+        prefetchLineupPhotos(m.lineups);
+        renderTacticalPitch(m.lineups);
+        if (lineupsTab) lineupsTab.innerHTML = '🟢 MACKOLİK KADROSU';
+      } else {
+        if (lineupsTab) lineupsTab.innerHTML = '⏳ MACKOLİK KADROSU YÜKLENİYOR';
+        fetchMackolikLineups(matchId, m).then(mkLineups => {
+          if (mkLineups) {
+            if (matchesData[matchId]) {
+              matchesData[matchId].lineups = mkLineups;
+            }
+            if (activeMatchId === matchId) {
+              prefetchLineupPhotos(mkLineups);
+              renderTacticalPitch(mkLineups);
+              if (lineupsTab) lineupsTab.innerHTML = '🟢 MACKOLİK KADROSU';
+            }
+          }
+        });
+      }
+
+      // 2. Eğer puan durumu alt sekmesi açıksa, o maçın ligini anında yükle
+      const standingsSubtab = document.getElementById('subtab-content-standings');
+      if (standingsSubtab && !standingsSubtab.classList.contains('hidden')) {
+        loadMatchStandings(m);
+      }
+
+      renderMatchList();
+    }
+
+
+    // 2D SAHA: HER OYUNCU KENDİ GERÇEK FOTOĞRAFIYLA
+    function renderTacticalPitch(lineups) {
+      const container = document.getElementById('pitchPlayersContainer');
+      container.innerHTML = '';
+
+      if (!lineups || !lineups.home || !lineups.away) {
+        container.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full text-center p-6 space-y-3 z-30 relative">
+            <span class="text-3xl animate-pulse">📋</span>
+            <div class="text-white font-black text-sm">Resmi Kadrolar Henüz Açıklanmadı</div>
+            <p class="text-zinc-400 text-xs max-w-xs">Bu karşılaşma için teknik ekipler tarafından 11'ler henüz federasyona ve sisteme bildirilmemiştir.</p>
+            <span class="text-[10px] bg-zinc-900/90 text-yellow-400 font-bold px-3 py-1 rounded-full border border-zinc-800">
+              Maç saatine 1 saat kala güncellenir
+            </span>
+          </div>
+        `;
+        document.getElementById('homeSubsList').innerHTML = '<div class="text-zinc-500 text-[11px] py-1 text-center">Yedek kulübesi açıklanmadı</div>';
+        document.getElementById('awaySubsList').innerHTML = '<div class="text-zinc-500 text-[11px] py-1 text-center">Yedek kulübesi açıklanmadı</div>';
+        return;
+      }
+
+      // Ev Sahibi Oyuncuları
+      lineups.home.players.forEach(p => {
+        container.appendChild(createPlayerPin(p, 'border-yellow-400', 'text-yellow-400'));
+      });
+
+      // Deplasman Oyuncuları
+      lineups.away.players.forEach(p => {
+        container.appendChild(createPlayerPin(p, 'border-blue-400', 'text-blue-300'));
+      });
+
+      // Yedekler
+      document.getElementById('homeSubsList').innerHTML = (lineups.home.subs || []).map(s => `
+        <div class="flex justify-between py-0.5 border-b border-zinc-800">
+          <span>#${s.number} ${s.name} (${s.pos})</span>
+          <span class="text-yellow-400 font-bold">${s.value || ''}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('awaySubsList').innerHTML = (lineups.away.subs || []).map(s => `
+        <div class="flex justify-between py-0.5 border-b border-zinc-800">
+          <span>#${s.number} ${s.name} (${s.pos})</span>
+          <span class="text-blue-400 font-bold">${s.value || ''}</span>
+        </div>
+      `).join('');
+    }
+
+    // Fotoğraflı Oyuncu Pini (TheSportsDB API Fotoğrafı Kullanır)
+    function createPlayerPin(p, borderColor, labelColor) {
+      const div = document.createElement('div');
+      div.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer transition-transform hover:scale-125 z-20';
+      div.style.left = `${p.x}%`;
+      div.style.top  = `${p.y}%`;
+
+      div.onclick = (e) => {
+        e.stopPropagation();
+        if (p.slug) {
+          switchMainTab('transfers');
+          loadPlayerProfile(p.slug);
+        }
+      };
+
+      // Önce önbellekteki fotoğrafı kullan, yoksa statik fallback
+      const cachedUrl     = playerPhotoCache[p.name];
+      const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=18181b&color=eab308&size=100`;
+      const fallback      = p.photo || defaultAvatar;
+      const initialSrc    = cachedUrl || fallback;
+      const pinId         = `pin-${p.name.replace(/\s+/g, '-').toLowerCase()}`;
+
+      div.innerHTML = `
+        <!-- Fotoğraflı Pin -->
+        <div class="relative w-9 h-9 rounded-full overflow-hidden border-2 ${borderColor} shadow-lg bg-zinc-900">
+          <img id="${pinId}" src="${initialSrc}" class="w-full h-full object-cover"
+               onerror="this.onerror=null; this.src='${defaultAvatar}';" />
+          <span class="absolute bottom-0 right-0 bg-black/90 text-white font-mono text-[8px] font-black px-1 rounded-tl">
+            ${p.number}
+          </span>
+        </div>
+
+        <!-- İsim & Piyasa Değeri Etiketi -->
+        <div class="mt-0.5 text-center bg-black/85 px-1.5 py-0.5 rounded backdrop-blur border border-white/10 shadow max-w-[85px]">
+          <span class="text-[9px] font-bold text-white block leading-tight truncate">${p.name}</span>
+          <span class="text-[8px] font-black ${labelColor} block leading-none">${p.value}</span>
+        </div>
+      `;
+
+      // Eğer önbellekte yoksa arka planda TheSportsDB'den çek ve görseli güncelle
+      if (!cachedUrl) {
+        fetchPlayerPhotoFromAPI(p.name).then(apiUrl => {
+          if (apiUrl) {
+            const imgEl = document.getElementById(pinId);
+            if (imgEl) imgEl.src = apiUrl;
+          }
+        });
+      }
+
+      return div;
+    }
+
+    function renderEventsTimeline(events) {
+      const container = document.getElementById('detailEventsTimeline');
+      if (!events || events.length === 0) {
+        container.innerHTML = '<div class="text-zinc-500 text-xs p-4 text-center">Henüz olay gerçekleşmedi.</div>';
+        return;
+      }
+
+      container.innerHTML = events.map(ev => `
+        <div class="flex items-start gap-2.5 p-2 bg-mackolik-league rounded-lg border border-mackolik text-xs">
+          <span class="font-mono font-black text-yellow-400 w-7 pt-0.5">${ev.minute}'</span>
+          <span class="text-base">${ev.type === 'GOAL' ? '⚽' : '🟨'}</span>
+          <div class="flex-1">
+            <span class="font-black text-white">${ev.player || ev.team}</span>
+            <span class="text-zinc-400 text-[11px] block mt-0.5">${ev.detail}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderStatsBars(stats) {
+      const container = document.getElementById('statsBarsContainer');
+      if (!stats) return;
+
+      const items = [
+        { label: 'Topla Oynama', home: stats.possession[0] + '%', away: stats.possession[1] + '%', homeVal: stats.possession[0], awayVal: stats.possession[1] },
+        { label: 'Toplam Şut', home: stats.shotsTotal[0], away: stats.shotsTotal[1], homeVal: stats.shotsTotal[0], awayVal: stats.shotsTotal[1] },
+        { label: 'İsabetli Şut', home: stats.shotsOnTarget[0], away: stats.shotsOnTarget[1], homeVal: stats.shotsOnTarget[0], awayVal: stats.shotsOnTarget[1] },
+        { label: 'Beklenen Gol (xG)', home: stats.expectedGoals[0], away: stats.expectedGoals[1], homeVal: parseFloat(stats.expectedGoals[0]) * 10, awayVal: parseFloat(stats.expectedGoals[1]) * 10 },
+        { label: 'Köşe Vuruşu (Korner)', home: stats.corners[0], away: stats.corners[1], homeVal: stats.corners[0], awayVal: stats.corners[1] }
+      ];
+
+      container.innerHTML = items.map(it => {
+        const total = (it.homeVal + it.awayVal) || 1;
+        const homePct = Math.round((it.homeVal / total) * 100);
+        return `
+          <div>
+            <div class="flex justify-between items-center text-xs mb-1 font-bold">
+              <span class="text-yellow-400 font-mono">${it.home}</span>
+              <span class="text-zinc-400">${it.label}</span>
+              <span class="text-blue-400 font-mono">${it.away}</span>
+            </div>
+            <div class="w-full h-2 bg-zinc-900 rounded-full flex overflow-hidden border border-zinc-800">
+              <div class="bg-yellow-400 h-full" style="width: ${homePct}%"></div>
+              <div class="bg-blue-500 h-full" style="width: ${100 - homePct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =============================================================
+    // 🌟 CANLI TRANSFER BORSASI HUB MODÜLÜ
+    // =============================================================
+    let currentTransferSubTab = 'deals';
+    let transfersData = null;
+
+    function switchTransferSubTab(sub) {
+      currentTransferSubTab = sub;
+      ['deals', 'rumors', 'top', 'player'].forEach(s => {
+        const contentEl = document.getElementById(`trans-content-${s}`);
+        const btnEl = document.getElementById(`btn-trans-${s}`);
+        if (contentEl) {
+          if (s === sub) contentEl.classList.remove('hidden');
+          else contentEl.classList.add('hidden');
+        }
+        if (btnEl) {
+          if (s === sub) {
+            btnEl.className = 'trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-yellow-400 text-black shadow transition flex items-center gap-1.5 whitespace-nowrap';
+          } else {
+            btnEl.className = 'trans-sub-btn px-4 py-2 rounded-xl text-xs font-black bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition flex items-center gap-1.5 whitespace-nowrap';
+          }
+        }
+      });
+      if (sub === 'player') {
+        const nameEl = document.getElementById('transBioName');
+        if (!nameEl || !nameEl.innerText) {
+          loadPlayerProfile('victor-osimhen');
+        }
+      }
+    }
+
+    async function loadTransfersHub() {
+      try {
+        const res = await fetch('/api/transfers');
+        const json = await res.json();
+        if (json.success && json.data) {
+          transfersData = json.data;
+          // Metrikleri doldur
+          if (transfersData.stats) {
+            const spendEl = document.getElementById('transferStatSpend');
+            const dealsEl = document.getElementById('transferStatDeals');
+            const rumEl   = document.getElementById('transferStatRumors');
+            if (spendEl) spendEl.innerText = transfersData.stats.totalSpendEur;
+            if (dealsEl) dealsEl.innerText = `${transfersData.stats.confirmedDealsCount} Transfer`;
+            if (rumEl)   rumEl.innerText   = `${transfersData.stats.activeRumorsCount} Masada`;
+          }
+          renderTransferDeals(transfersData.confirmedDeals || []);
+          renderTransferRumors(transfersData.rumors || []);
+          renderTopValuedPlayers(transfersData.topValuedPlayers || []);
+        }
+      } catch(e) {
+        console.error('Transfer verisi alınamadı:', e);
+      }
+    }
+
+    function renderTransferDeals(deals) {
+      const container = document.getElementById('transDealsGrid');
+      const badge = document.getElementById('transDealsCountBadge');
+      if (badge) badge.innerText = `${deals.length} Transfer`;
+      if (!container) return;
+
+      if (!deals || deals.length === 0) {
+        container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-500 text-xs">Aradığınız kritere uygun resmileşen transfer bulunamadı.</div>';
+        return;
+      }
+
+      container.innerHTML = deals.map(d => {
+        let typeBadgeClass = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        if (d.type === 'REKOR SATIŞ') typeBadgeClass = 'bg-yellow-400/20 text-yellow-300 border-yellow-400/40 font-black';
+        else if (d.type === 'BEDELSİZ') typeBadgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+        else if (d.type === 'KİRALIK') typeBadgeClass = 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+
+        return `
+          <div class="bg-mackolik-card border border-mackolik hover:border-zinc-700 rounded-2xl p-4 shadow-xl transition flex flex-col justify-between group">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex-shrink-0">
+                  <img src="${d.photo}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'" />
+                </div>
+                <div>
+                  <h4 class="font-black text-white text-sm group-hover:text-yellow-400 transition cursor-pointer" onclick="switchTransferSubTab('player'); loadPlayerProfile('${d.player.toLowerCase().replace(/\\s+/g, '-')}')">
+                    ${d.player}
+                  </h4>
+                  <div class="text-[11px] text-zinc-400 flex items-center gap-2 mt-0.5">
+                    <span>${d.pos}</span>
+                    <span>•</span>
+                    <span>${d.age} Yaş</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${typeBadgeClass}">
+                ${d.type}
+              </span>
+            </div>
+
+            <!-- Transfer Yönü (Eski Kulüp ➔ Yeni Kulüp) -->
+            <div class="my-3 py-2.5 px-3 bg-zinc-950/80 rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2 max-w-[42%] truncate">
+                ${renderTeamLogoHtml(d.fromClub, 'w-5 h-5')}
+                <span class="text-zinc-300 font-semibold truncate" title="${d.fromClub}">${d.fromClub}</span>
+              </div>
+              <span class="text-yellow-400 font-black text-sm flex-shrink-0 px-1">➔</span>
+              <div class="flex items-center gap-2 max-w-[42%] truncate justify-end">
+                <span class="text-white font-bold truncate" title="${d.toClub}">${d.toClub}</span>
+                ${renderTeamLogoHtml(d.toClub, 'w-5 h-5')}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-zinc-800/60">
+              <div class="text-zinc-400 text-[11px]">
+                Tarih: <span class="text-zinc-300">${d.date}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-zinc-500">Bonservis:</span>
+                <span class="font-mono font-black text-yellow-400 text-sm">${d.fee}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTransferRumors(rumors) {
+      const container = document.getElementById('transRumorsGrid');
+      if (!container) return;
+
+      if (!rumors || rumors.length === 0) {
+        container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-500 text-xs">Aradığınız kritere uygun dedikodu bulunamadı.</div>';
+        return;
+      }
+
+      container.innerHTML = rumors.map(r => {
+        let probColor = 'bg-yellow-400';
+        let probTextColor = 'text-yellow-400';
+        if (r.probability >= 75) { probColor = 'bg-emerald-400'; probTextColor = 'text-emerald-400'; }
+        else if (r.probability < 50) { probColor = 'bg-orange-400'; probTextColor = 'text-orange-400'; }
+
+        return `
+          <div class="bg-mackolik-card border border-mackolik hover:border-red-500/40 rounded-2xl p-4 shadow-xl transition flex flex-col justify-between">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="font-black text-white text-sm">${r.player}</h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                    ${r.urgency}
+                  </span>
+                </div>
+                <div class="text-[11px] text-zinc-400 mt-0.5">${r.pos}</div>
+              </div>
+              <div class="text-right">
+                <div class="text-base font-black font-mono ${probTextColor}">%${r.probability}</div>
+                <div class="text-[9px] text-zinc-500 font-bold uppercase">İhtimal</div>
+              </div>
+            </div>
+
+            <!-- İhtimal Çubuğu -->
+            <div class="w-full h-1.5 bg-zinc-900 rounded-full my-2.5 overflow-hidden border border-zinc-800">
+              <div class="h-full ${probColor} transition-all duration-500" style="width: ${r.probability}%"></div>
+            </div>
+
+            <!-- İlgili Kulüpler -->
+            <div class="py-2 px-3 bg-zinc-950/80 rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs my-1">
+              <div class="flex items-center gap-2 max-w-[45%] truncate">
+                ${renderTeamLogoHtml(r.currentClub, 'w-4 h-4')}
+                <span class="text-zinc-400 truncate" title="${r.currentClub}">${r.currentClub}</span>
+              </div>
+              <span class="text-zinc-500 text-xs px-1">➔</span>
+              <div class="flex items-center gap-2 max-w-[45%] truncate justify-end">
+                <span class="text-yellow-400 font-bold truncate" title="${r.targetClub}">${r.targetClub}</span>
+                ${renderTeamLogoHtml(r.targetClub, 'w-4 h-4')}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-2 border-t border-zinc-800/60 mt-1">
+              <div class="text-[11px] text-zinc-400 truncate">
+                Durum: <span class="text-white font-semibold">${r.status}</span>
+              </div>
+              <div class="text-[10px] text-zinc-500 flex items-center gap-1">
+                <span>📰 ${r.source}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTopValuedPlayers(players) {
+      const tbody = document.getElementById('transTopPlayersBody');
+      if (!tbody) return;
+
+      if (!players || players.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-zinc-500 text-xs">Veri bulunamadı.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = players.map(p => `
+        <tr class="hover:bg-zinc-800/50 transition">
+          <td class="py-3 px-3 text-center">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded text-xs font-mono font-bold ${p.rank <= 3 ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30' : 'bg-zinc-900 text-zinc-400'}">
+              ${p.rank}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-bold text-white text-xs whitespace-nowrap cursor-pointer hover:text-yellow-400 transition" onclick="switchTransferSubTab('player'); loadPlayerProfile('${p.name.toLowerCase().replace(/\\s+/g, '-')}')">
+            ${p.name}
+          </td>
+          <td class="py-3 px-3 text-zinc-300 text-xs whitespace-nowrap">
+            <div class="flex items-center gap-2">
+              ${renderTeamLogoHtml(p.club, 'w-4 h-4')}
+              <span>${p.club}</span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-center text-zinc-400 text-xs">${p.pos}</td>
+          <td class="py-3 px-3 text-center text-zinc-400 text-xs">${p.age}</td>
+          <td class="py-3 px-4 text-right font-black font-mono text-emerald-400 text-sm whitespace-nowrap">${p.value}</td>
+        </tr>
+      `).join('');
+    }
+
+    function filterTransfers(query) {
+      if (!transfersData) return;
+      const q = (query || '').toLowerCase().trim();
+
+      const filteredDeals = (transfersData.confirmedDeals || []).filter(d =>
+        !q || d.player.toLowerCase().includes(q) || d.fromClub.toLowerCase().includes(q) || d.toClub.toLowerCase().includes(q)
+      );
+      renderTransferDeals(filteredDeals);
+
+      const filteredRumors = (transfersData.rumors || []).filter(r =>
+        !q || r.player.toLowerCase().includes(q) || r.currentClub.toLowerCase().includes(q) || r.targetClub.toLowerCase().includes(q)
+      );
+      renderTransferRumors(filteredRumors);
+
+      const filteredTop = (transfersData.topValuedPlayers || []).filter(p =>
+        !q || p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q)
+      );
+      renderTopValuedPlayers(filteredTop);
+    }
+
+    // OYUNCU DETAYI VE İLGİLİ HABERLERİ YÜKLE
+    async function loadPlayerProfile(slug) {
+      try {
+        const res = await fetch(`/api/players/${slug}`);
+        const { data } = await res.json();
+        
+        document.getElementById('transBioName').innerText = data.fullName;
+        document.getElementById('transBioClub').innerText = data.currentClub;
+        document.getElementById('transBioPos').innerText = data.primaryPosition;
+        document.getElementById('transBioNat').innerText = data.nationality + ' • ' + (data.birthDate || '');
+        document.getElementById('transBioValue').innerText = '€' + (data.currentMarketValueEur / 1000000).toFixed(1) + 'M';
+        document.getElementById('transBioContract').innerText = data.contractUntil;
+
+        // Önce statik fotoğrafı göster
+        const photoEl = document.getElementById('transBioPhoto');
+        photoEl.src = data.photoUrl || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=200';
+
+        // Sonra TheSportsDB'den gerçek API fotoğrafını çek ve güncelle
+        fetchPlayerPhotoFromAPI(data.fullName).then(apiPhoto => {
+          if (apiPhoto && photoEl) {
+            photoEl.src = apiPhoto;
+            photoEl.style.border = '2px solid #facc15';
+            photoEl.title = '📸 TheSportsDB API';
+          }
+        });
+
+        // Transferler
+        document.getElementById('transBioList').innerHTML = data.transfers.map(t => `
+          <div class="flex justify-between py-1 border-b border-mackolik text-[11px]">
+            <span>${t.season} | ${t.from} ➔ ${t.to}</span>
+            <span class="font-bold text-yellow-400">${t.fee}</span>
+          </div>
+        `).join('');
+
+        // Piyasa Değeri Grafiği
+        renderTransferChart(data.valuationHistory);
+
+        // OYUNCUYLA İLGİLİ HABERLER
+        const newsContainer = document.getElementById('playerRelatedNewsGrid');
+        if (data.relatedNews && data.relatedNews.length > 0) {
+          newsContainer.innerHTML = data.relatedNews.map(n => `
+            <div onclick="openNewsModal('${n.id}')" class="bg-mackolik-league p-3 rounded-xl border border-mackolik hover:border-zinc-500 transition cursor-pointer flex gap-3 items-center group">
+              <img src="${n.imageUrl}" class="w-20 h-20 rounded-lg object-cover flex-shrink-0 group-hover:scale-105 transition" />
+              <div>
+                <div class="flex items-center gap-1.5 text-[10px] text-zinc-400 mb-1">
+                  <span class="text-yellow-400 font-bold">${n.category}</span>
+                  <span>•</span>
+                  <span>${n.date}</span>
+                </div>
+                <h4 class="text-xs font-bold text-white group-hover:text-yellow-400 transition leading-snug line-clamp-2">
+                  ${n.title}
+                </h4>
+                <p class="text-[11px] text-zinc-400 mt-1 line-clamp-1">${n.summary}</p>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          newsContainer.innerHTML = '<div class="text-xs text-zinc-500 p-4">Bu oyuncuyla ilgili henüz haber bulunmuyor.</div>';
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function renderTransferChart(history) {
+      const ctx = document.getElementById('transChartCanvas').getContext('2d');
+      const labels = history.map(h => h.date);
+      const values = history.map(h => h.value / 1000000);
+
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Piyasa Değeri (€ Milyon)',
+            data: values,
+            borderColor: '#facc15',
+            backgroundColor: 'rgba(250, 204, 21, 0.15)',
+            borderWidth: 3,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#eab308'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => '€' + v + 'M' }, grid: { color: '#1e293b' } }
+          }
+        }
+      });
+    }
+
+
+
+    // Puan Durumu
+    async function loadStandings() {
+      try {
+        const res = await fetch('/api/standings');
+        const json = await res.json();
+        standingsData = json.data || [];
+        const tbody = document.getElementById('standingsTableBody');
+        tbody.innerHTML = standingsData.map(s => `
+          <tr class="hover:bg-zinc-800/60 transition ${s.team === 'Galatasaray' ? 'bg-yellow-400/10 font-bold' : ''}">
+            <td class="py-2 px-2 text-center font-bold ${s.rank <= 2 ? 'text-yellow-400' : 'text-zinc-400'}">${s.rank}</td>
+            <td class="py-2 px-3 font-semibold text-white">${s.team}</td>
+            <td class="py-2 px-2 text-center text-zinc-400">${s.played}</td>
+            <td class="py-2 px-2 text-center text-zinc-400">${s.win}</td>
+            <td class="py-2 px-2 text-center text-zinc-400">${s.draw}</td>
+            <td class="py-2 px-2 text-center text-zinc-400">${s.loss}</td>
+            <td class="py-2 px-2 text-center text-zinc-300 font-mono">${s.gd > 0 ? '+' + s.gd : s.gd}</td>
+            <td class="py-2 px-2 text-center font-black text-yellow-400 font-mono">${s.points}</td>
+          </tr>
+        `).join('');
+      } catch(e) {}
+    }
+
+    // ========================================================
+    // 📰 CANLI SPOR RSS HABER ÇEKİCİ (Fanatik, Fotomaç, NTV Spor)
+    // ========================================================
+    const RSS_SOURCES = [
+      { name: 'Fanatik',   color: '#f59e0b', url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.fanatik.com.tr%2Frss%2Fson-dakika' },
+      { name: 'Fotomaç',   color: '#ef4444', url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.fotomac.com.tr%2Frss%2Fanasayfa.xml' },
+      { name: 'NTV Spor',  color: '#3b82f6', url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.ntvspor.net%2Frss' }
+    ];
+
+    const FALLBACK_FOOTBALL_IMAGES = [
+      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=800&q=80'
+    ];
+
+    let liveBreakingList = [];
+    let breakingCycleIndex = 0;
+    let breakingCycleTimer = null;
+
+    async function loadNews() {
+      let fetchedArticles = [];
+
+      // 1. Tarayıcıdan paralel olarak gerçek RSS kaynaklarını sorgula
+      const fetchPromises = RSS_SOURCES.map(async (src) => {
+        try {
+          const resp = await fetch(src.url, { cache: 'no-store' });
+          if (!resp.ok) return [];
+          const data = await resp.json();
+          if (data && data.status === 'ok' && Array.isArray(data.items)) {
+            return data.items.map((it, idx) => {
+              // Açıklamadan HTML taglarını temizle
+              let cleanDesc = (it.description || '').replace(/<[^>]*>/g, '').trim();
+              if (cleanDesc.length > 200) cleanDesc = cleanDesc.slice(0, 197) + '...';
+
+              // Resim URL'sini bul (enclosure, thumbnail veya fallback)
+              let img = it.thumbnail || (it.enclosure && it.enclosure.link);
+              if (!img) {
+                const matchImg = (it.description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+                img = matchImg ? matchImg[1] : null;
+              }
+              if (!img) {
+                img = FALLBACK_FOOTBALL_IMAGES[idx % FALLBACK_FOOTBALL_IMAGES.length];
+              }
+
+              return {
+                id: it.guid || it.link || `rss-${Math.random()}`,
+                title: it.title,
+                summary: cleanDesc || it.title,
+                content: it.description || it.title,
+                date: it.pubDate ? new Date(it.pubDate).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Son Dakika',
+                imageUrl: img,
+                link: it.link,
+                category: src.name.toUpperCase(),
+                source: src.name,
+                sourceColor: src.color,
+                views: `${Math.floor(Math.random() * 80 + 20)}.000`
+              };
+            });
+          }
+        } catch (e) {
+          return [];
+        }
+        return [];
+      });
+
+      const settled = await Promise.allSettled(fetchPromises);
+      settled.forEach(s => {
+        if (s.status === 'fulfilled' && Array.isArray(s.value)) {
+          fetchedArticles.push(...s.value);
+        }
+      });
+
+      // Tarihe göre sırala
+      if (fetchedArticles.length > 0) {
+        newsData = fetchedArticles;
+        console.log(`✅ [RSS] ${newsData.length} canlı haber başarıyla çekildi!`);
+        // Sunucu önbelleğine de gönder
+        fetch('/api/sync-rss-news', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: newsData })
+        }).catch(() => {});
+      } else {
+        // Fallback: sunucu API'sini dene
+        try {
+          const res = await fetch('/api/news');
+          const json = await res.json();
+          newsData = json.data || [];
+        } catch(e) {}
+      }
+
+      if (newsData.length === 0) return;
+
+      // 2. MANŞET HABERİ GÜNCELLE
+      const hero = newsData[0];
+      if (hero) {
+        const heroImg = document.getElementById('heroNewsImg');
+        const heroTitle = document.getElementById('heroNewsTitle');
+        const heroSummary = document.getElementById('heroNewsSummary');
+        const heroDate = document.getElementById('heroNewsDate');
+        const heroLink = document.getElementById('heroNewsLink');
+        const heroSource = document.getElementById('heroNewsSource');
+        const heroTag = document.getElementById('heroNewsTag');
+
+        if (heroImg) heroImg.src = hero.imageUrl;
+        if (heroTitle) heroTitle.innerText = hero.title;
+        if (heroSummary) heroSummary.innerText = hero.summary;
+        if (heroDate) heroDate.innerText = `${hero.source} • ${hero.date}`;
+        if (heroSource) {
+          heroSource.innerText = `📡 ${hero.source}`;
+          heroSource.style.color = hero.sourceColor || '#facc15';
+        }
+        if (heroTag) heroTag.innerText = `🔥 CANLI ${hero.category}`;
+        if (heroLink) heroLink.href = hero.link;
+
+        const heroBox = document.getElementById('heroNewsContainer');
+        if (heroBox) {
+          heroBox.onclick = () => openNewsModal(hero.id);
+        }
+        if (heroLink) {
+          heroLink.onclick = (e) => { e.preventDefault(); openNewsModal(hero.id); };
+        }
+      }
+
+      // 3. HABER KARTLARI IZGARASINI DOLDUR (GRID) - Tıklanınca SİTE İÇİNDE AÇILIR
+      const grid = document.getElementById('newsGrid');
+      const gridItems = newsData.slice(1, 13);
+      grid.innerHTML = gridItems.map(n => `
+        <div onclick="openNewsModal('${n.id}')" class="bg-mackolik-card border border-mackolik rounded-xl overflow-hidden hover:border-yellow-400 transition cursor-pointer flex flex-col justify-between group shadow-lg hover:scale-[1.01] duration-200">
+          <div class="relative h-44 overflow-hidden bg-zinc-950">
+            <img src="${n.imageUrl}" onerror="this.src='https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600'" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+            <span class="absolute top-2.5 left-2.5 bg-black/80 text-yellow-400 text-[10px] font-black px-2 py-0.5 rounded border border-white/10" style="color: ${n.sourceColor || '#facc15'}">
+              ${n.category}
+            </span>
+          </div>
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-[10px] text-zinc-400 mb-1 flex items-center justify-between">
+                <span>${n.source || 'Haber'}</span>
+                <span>${n.date}</span>
+              </div>
+              <h4 class="text-sm font-bold text-white group-hover:text-yellow-400 transition leading-snug line-clamp-2">${n.title}</h4>
+              <p class="text-xs text-zinc-400 mt-2 line-clamp-2">${n.summary}</p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-mackolik flex items-center justify-between text-[11px] text-zinc-400">
+              <span>👁 ${n.views || '45K'}</span>
+              <span class="text-yellow-400 font-bold group-hover:translate-x-1 transition">Sitede Oku ➔</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // 4. ÜSTTEKİ "🚨 SON DAKİKA" BANDINI CANLI HABERLERLE DÖNDÜR
+      liveBreakingList = newsData.slice(0, 10);
+      startBreakingNewsCycle();
+    }
+
+    // Son Dakika Bandını Her 7 Saniyede Bir Sıradaki Canlı Habere Çevir
+    function startBreakingNewsCycle() {
+      if (liveBreakingList.length === 0) return;
+      if (breakingCycleTimer) clearInterval(breakingCycleTimer);
+
+      const showItem = (idx) => {
+        const item = liveBreakingList[idx % liveBreakingList.length];
+        if (!item) return;
+
+        const titleEl  = document.getElementById('breakingNewsTitle');
+        const sourceEl = document.getElementById('breakingNewsSource');
+        const linkEl   = document.getElementById('breakingNewsLink');
+        const timeEl   = document.getElementById('breakingNewsTime');
+
+        if (titleEl)  titleEl.innerText = item.title;
+        if (sourceEl) {
+          sourceEl.innerText = `[${item.source || 'Spor'}]`;
+          sourceEl.style.color = item.sourceColor || '#facc15';
+        }
+        if (linkEl) {
+          linkEl.href = '#';
+          linkEl.onclick = (e) => {
+            e.preventDefault();
+            openNewsModal(item.id);
+          };
+        }
+        if (timeEl) timeEl.innerText = item.date || 'Şimdi';
+      };
+
+      // İlk haberi hemen koy
+      showItem(0);
+
+      // Her 7 saniyede bir sıradakine geç
+      breakingCycleTimer = setInterval(() => {
+        breakingCycleIndex = (breakingCycleIndex + 1) % liveBreakingList.length;
+        showItem(breakingCycleIndex);
+      }, 7000);
+    }
+
+    // ========================================================
+    // 📖 DAHİLİ HABER OKUYUCU (MODAL İÇİNDE SİTEDE OKUMA)
+    // ========================================================
+    function openNewsModal(id) {
+      let item = newsData.find(n => n.id === id);
+      if (!item) {
+        // ID string eşleşmezse başlığa göre ara
+        item = newsData.find(n => String(n.id) === String(id));
+      }
+      if (!item) return;
+
+      const imgEl = document.getElementById('modalNewsImg');
+      const catEl = document.getElementById('modalNewsCategory');
+      const srcEl = document.getElementById('modalNewsSource');
+      const dateEl = document.getElementById('modalNewsDate');
+      const titleEl = document.getElementById('modalNewsTitle');
+      const contentEl = document.getElementById('modalNewsContent');
+
+      if (imgEl) imgEl.src = item.imageUrl || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800';
+      if (catEl) catEl.innerText = item.category || 'FUTBOL';
+      if (srcEl) srcEl.innerText = `📡 ${item.source || 'Spor'}`;
+      if (dateEl) dateEl.innerText = item.date || 'Son Dakika';
+      if (titleEl) titleEl.innerText = item.title;
+
+      // Haberi temiz, okunaklı paragraflara böl
+      let rawText = item.content || item.summary || item.title;
+      // HTML kalıntılarını temizle
+      let cleanText = rawText.replace(/<[^>]+>/g, '').trim();
+
+      if (contentEl) {
+        contentEl.innerHTML = `
+          <p class="text-base text-zinc-200 leading-relaxed font-normal">${cleanText}</p>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Spor dünyasındaki tüm son dakika transfer gelişmeleri, maç öncesi kadro analizleri ve kulüplerin resmi açıklamaları anlık olarak Sakıpkolik üzerinden canlı aktarılmaya devam ediyor.
+          </p>
+          ${item.link && item.link.startsWith('http') ? `
+            <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500">
+              <span>Haber Sağlayıcı: <b class="text-zinc-300">${item.source}</b></span>
+              <a href="${item.link}" target="_blank" class="text-yellow-400/80 hover:text-yellow-400 hover:underline">Orijinal Kaynağa Göz At ↗</a>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      const modal = document.getElementById('newsModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeNewsModal() {
+      const modal = document.getElementById('newsModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleNewsModalBackdrop(e) {
+      if (e.target.id === 'newsModal') {
+        closeNewsModal();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeNewsModal();
+    });
+
+    function updateScoreTicker() {
+      const bar = document.getElementById('scoreTickerBar');
+      const liveItems = Object.values(matchesData).filter(m => isMatchLive(m));
+      bar.querySelectorAll('.ticker-item').forEach(e => e.remove());
+
+      liveItems.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'ticker-item bg-zinc-900 border border-mackolik hover:border-yellow-400 rounded px-2.5 py-1 flex items-center gap-2 text-xs cursor-pointer transition';
+        div.onclick = () => { switchMainTab('matches'); selectActiveMatch(m.id); };
+        div.innerHTML = `
+          <span class="text-red-400 font-mono font-bold text-[10px]">${m.minute}'</span>
+          <span class="font-medium text-zinc-200">${m.homeTeam} <b class="text-yellow-400 font-mono">${m.homeScore}-${m.awayScore}</b> ${m.awayTeam}</span>
+        `;
+        bar.appendChild(div);
+      });
+    }
+
+    function connectLiveScoreSSE() {
+      const evt = new EventSource('/api/live/stream');
+
+      evt.addEventListener('init', (e) => {
+        // SSE init verisi artık kullanılmıyor — Mackolik tek kaynak
+        // Sadece listeyi mevcut Mackolik verisiyle yenile
+        renderMatchList();
+        updateScoreTicker();
+      });
+
+      evt.addEventListener('score_tick', (e) => {
+        const update = JSON.parse(e.data);
+        const match = matchesData[update.matchId];
+        if (!match) return;
+
+        if (update.latestEvent && update.latestEvent.type === 'GOAL') {
+          playWhistleSound();
+          const row = document.getElementById(`match-row-${update.matchId}`);
+          if (row) {
+            row.classList.add('flash-goal');
+            setTimeout(() => row.classList.remove('flash-goal'), 3000);
+          }
+        }
+
+        match.minute = update.minute;
+        match.homeScore = update.homeScore;
+        match.awayScore = update.awayScore;
+        if (update.odds) match.odds = update.odds;
+        if (update.latestEvent) match.events.unshift(update.latestEvent);
+
+        renderMatchList();
+        updateScoreTicker();
+
+        if (activeMatchId === update.matchId) {
+          selectActiveMatch(update.matchId);
+        }
+
+        loadStandings();
+      });
+
+      // ─── 🚨 SON DAKİKA HABER YAYINI DİNLEYİCİSİ ─────────────
+      evt.addEventListener('breakingNews', (e) => {
+        try {
+          const item = JSON.parse(e.data);
+          displayBreakingNews(item);
+        } catch(err) {
+          console.error('Breaking news parse hatası:', err);
+        }
+      });
+
+      // ─── ⚡ CANLI SKOR SCRAPER / CHANGE DETECTOR DİNLEYİCİSİ ───
+      evt.addEventListener('liveScoreUpdate', (e) => {
+        try {
+          const match = JSON.parse(e.data);
+          handleLiveScoreUpdate(match);
+        } catch(err) {
+          console.error('liveScoreUpdate parse hatası:', err);
+        }
+      });
+    }
+
+    // ========================================================
+    // ⚡ CANLI SKOR SCRAPING VE CHANGE DETECTOR MOTORU
+    // ========================================================
+    function handleLiveScoreUpdate(match) {
+      if (!match) return;
+      const matchId = match.id;
+
+      // Sadece Mackolik'ten zaten mevcut olan maçları güncelle — yeni eklemez
+      if (!matchesData[matchId]) return;
+
+      matchesData[matchId].homeScore = match.homeScore;
+      matchesData[matchId].awayScore = match.awayScore;
+      matchesData[matchId].minute = match.minute;
+      matchesData[matchId].status = match.status;
+
+      // GOL ALGISI (Görsel Parlama, Düdük Sesi ve Toast Bildirimi)
+      if (match.event === 'GOAL') {
+        playWhistleSound();
+        const row = document.getElementById(`match-row-${matchId}`);
+        if (row) {
+          row.classList.add('flash-goal');
+          setTimeout(() => row.classList.remove('flash-goal'), 3500);
+        }
+        showGoalToast(match);
+      }
+
+      renderMatchList();
+      updateScoreTicker();
+
+      if (activeMatchId === matchId) {
+        selectActiveMatch(matchId);
+      }
+    }
+
+    // Gol Toast Bildirimi
+    function showGoalToast(match) {
+      const existing = document.getElementById('goalToastPopup');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'goalToastPopup';
+      toast.className = 'fixed bottom-5 right-5 z-50 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 text-black p-4 rounded-xl shadow-2xl flex items-center gap-3 border-2 border-white animate-bounce duration-300';
+      toast.innerHTML = `
+        <span class="text-3xl">⚽</span>
+        <div>
+          <div class="font-black text-[10px] uppercase tracking-wider text-black/80">⚡ CANLI SKOR SCRAPER: GOL!</div>
+          <div class="text-sm font-black">${match.scoringTeam || 'Gol'} (${match.newScore || match.homeScore + '-' + match.awayScore})</div>
+          <div class="text-[11px] font-bold text-black/90">${match.homeTeam} vs ${match.awayTeam} • Dakika: ${match.minute}'</div>
+        </div>
+        <button onclick="this.parentElement.remove()" class="ml-2 font-black text-sm bg-black/20 hover:bg-black/40 rounded-full w-6 h-6 flex items-center justify-center">✕</button>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+    }
+
+    // ========================================================
+    // ⚡ CANLI SKOR SCRAPER (MACKOLİK — vd.mackolik.com)
+    // ========================================================
+    // ========================================================
+    // ⚡ CANLI SKOR SCRAPER (100% GERÇEK CANLI AĞ — SIFIR MANUEL MAÇ)
+    // ========================================================
+    // ========================================================
+    // ⚡ CANLI SKOR SCRAPER (100% GERÇEK CANLI AĞ — SIFIR MANUEL MAÇ)
+    // ========================================================
+    let clientScraperPrevious = new Map();
+
+
+    // 📋 Gerçekçi 11'ler ve Saha Koordinatları (Lineups) Üretici
+    const KNOWN_SQUADS = {
+      'Galatasaray': {
+        formation: '4-2-3-1', manager: 'Okan Buruk',
+        players: [
+          { number: 1, name: 'Muslera', pos: 'GK', value: '€1.5M', x: 50, y: 7 },
+          { number: 4, name: 'Jakobs', pos: 'LB', value: '€8.0M', x: 15, y: 17 },
+          { number: 42, name: 'Abdülkerim', pos: 'CB', value: '€7.5M', x: 38, y: 15 },
+          { number: 6, name: 'Davinson Sanchez', pos: 'CB', value: '€18.0M', x: 62, y: 15 },
+          { number: 23, name: 'Kaan Ayhan', pos: 'RB', value: '€4.5M', x: 85, y: 17 },
+          { number: 34, name: 'Lucas Torreira', pos: 'DM', value: '€15.0M', x: 35, y: 27 },
+          { number: 20, name: 'Gabriel Sara', pos: 'CM', value: '€18.0M', x: 65, y: 27 },
+          { number: 11, name: 'Yunus Akgün', pos: 'LW', value: '€6.5M', x: 18, y: 38 },
+          { number: 10, name: 'Dries Mertens', pos: 'AM', value: '€1.8M', x: 50, y: 36 },
+          { number: 53, name: 'Barış Alper Yılmaz', pos: 'RW', value: '€20.0M', x: 82, y: 38 },
+          { number: 45, name: 'Victor Osimhen', pos: 'ST', value: '€75.0M', x: 50, y: 46 }
+        ],
+        subs: [
+          { number: 9, name: 'Mauro Icardi', pos: 'ST', value: '€15M' },
+          { number: 22, name: 'Hakim Ziyech', pos: 'RW', value: '€7M' }
+        ]
+      },
+      'Fenerbahçe': {
+        formation: '4-2-3-1', manager: 'Jose Mourinho',
+        players: [
+          { number: 40, name: 'Dominik Livakovic', pos: 'GK', value: '€11.0M', x: 50, y: 92 },
+          { number: 24, name: 'Jayden Oosterwolde', pos: 'LB', value: '€13.0M', x: 15, y: 80 },
+          { number: 6, name: 'Alexander Djiku', pos: 'CB', value: '€9.0M', x: 38, y: 82 },
+          { number: 4, name: 'Çağlar Söyüncü', pos: 'CB', value: '€7.5M', x: 62, y: 82 },
+          { number: 21, name: 'Bright Osayi-Samuel', pos: 'RB', value: '€8.0M', x: 85, y: 80 },
+          { number: 34, name: 'Sofyan Amrabat', pos: 'DM', value: '€22.0M', x: 35, y: 71 },
+          { number: 13, name: 'Fred', pos: 'CM', value: '€15.0M', x: 65, y: 71 },
+          { number: 97, name: 'Allan Saint-Maximin', pos: 'LW', value: '€18.0M', x: 18, y: 60 },
+          { number: 53, name: 'Sebastian Szymanski', pos: 'AM', value: '€19.0M', x: 50, y: 62 },
+          { number: 10, name: 'Dusan Tadic', pos: 'RW', value: '€3.5M', x: 82, y: 60 },
+          { number: 9, name: 'Edin Dzeko', pos: 'ST', value: '€2.5M', x: 50, y: 52 }
+        ],
+        subs: [
+          { number: 19, name: 'Youssef En-Nesyri', pos: 'ST', value: '€22M' },
+          { number: 17, name: 'İrfan Can Kahveci', pos: 'RW', value: '€10M' }
+        ]
+      },
+      'Beşiktaş': {
+        formation: '4-2-3-1', manager: 'Giovanni van Bronckhorst',
+        players: [
+          { number: 34, name: 'Mert Günok', pos: 'GK', value: '€1.2M', x: 50, y: 7 },
+          { number: 26, name: 'Arthur Masuaku', pos: 'LB', value: '€3.5M', x: 15, y: 17 },
+          { number: 14, name: 'Felix Uduokhai', pos: 'CB', value: '€7.0M', x: 38, y: 15 },
+          { number: 3, name: 'Gabriel Paulista', pos: 'CB', value: '€2.5M', x: 62, y: 15 },
+          { number: 2, name: 'Jonas Svensson', pos: 'RB', value: '€1.8M', x: 85, y: 17 },
+          { number: 83, name: 'Gedson Fernandes', pos: 'CM', value: '€17.0M', x: 35, y: 27 },
+          { number: 28, name: 'Al-Musrati', pos: 'DM', value: '€14.0M', x: 65, y: 27 },
+          { number: 7, name: 'Milot Rashica', pos: 'LW', value: '€7.5M', x: 18, y: 38 },
+          { number: 27, name: 'Rafa Silva', pos: 'AM', value: '€14.0M', x: 50, y: 36 },
+          { number: 18, name: 'Joao Mario', pos: 'RW', value: '€4.0M', x: 82, y: 38 },
+          { number: 17, name: 'Ciro Immobile', pos: 'ST', value: '€4.0M', x: 50, y: 46 }
+        ],
+        subs: [
+          { number: 9, name: 'Semih Kılıçsoy', pos: 'ST', value: '€15M' },
+          { number: 71, name: 'Jean Onana', pos: 'CM', value: '€3.5M' }
+        ]
+      },
+      'Trabzonspor': {
+        formation: '4-2-3-1', manager: 'Şenol Güneş',
+        players: [
+          { number: 1, name: 'Uğurcan Çakır', pos: 'GK', value: '€8.5M', x: 50, y: 7 },
+          { number: 18, name: 'Eren Elmalı', pos: 'LB', value: '€4.0M', x: 15, y: 17 },
+          { number: 44, name: 'Arseniy Batagov', pos: 'CB', value: '€2.0M', x: 38, y: 15 },
+          { number: 15, name: 'Stefan Savic', pos: 'CB', value: '€2.5M', x: 62, y: 15 },
+          { number: 77, name: 'Pedro Malheiro', pos: 'RB', value: '€4.5M', x: 85, y: 17 },
+          { number: 6, name: 'Batista Mendy', pos: 'DM', value: '€10.0M', x: 35, y: 27 },
+          { number: 5, name: 'Okay Yokuşlu', pos: 'CM', value: '€2.8M', x: 65, y: 27 },
+          { number: 99, name: 'Mislav Orsic', pos: 'LW', value: '€2.2M', x: 18, y: 38 },
+          { number: 7, name: 'Edin Visca', pos: 'RW', value: '€2.2M', x: 82, y: 38 },
+          { number: 11, name: 'Ozan Tufan', pos: 'AM', value: '€2.8M', x: 50, y: 36 },
+          { number: 17, name: 'Simon Banza', pos: 'ST', value: '€16.0M', x: 50, y: 46 }
+        ],
+        subs: [
+          { number: 9, name: 'Anthony Nwakaeme', pos: 'LW', value: '€1.2M' },
+          { number: 70, name: 'Denis Dragus', pos: 'ST', value: '€4.0M' }
+        ]
+      },
+      'Antalyaspor': {
+        formation: '4-2-3-1', manager: 'Alex de Souza',
+        players: [
+          { number: 1, name: 'Kenan Piric', pos: 'GK', value: '€1.2M', x: 50, y: 7 },
+          { number: 11, name: 'Güray Vural', pos: 'LB', value: '€600K', x: 15, y: 17 },
+          { number: 89, name: 'Veysel Sarı', pos: 'CB', value: '€400K', x: 38, y: 15 },
+          { number: 5, name: 'Thalisson', pos: 'CB', value: '€1.5M', x: 62, y: 15 },
+          { number: 27, name: 'Mert Yılmaz', pos: 'RB', value: '€800K', x: 85, y: 17 },
+          { number: 6, name: 'Soner Dikmen', pos: 'DM', value: '€1.0M', x: 35, y: 27 },
+          { number: 8, name: 'Erdal Rakip', pos: 'CM', value: '€1.8M', x: 65, y: 27 },
+          { number: 10, name: 'Sam Larsson', pos: 'LW', value: '€2.5M', x: 18, y: 38 },
+          { number: 22, name: 'Sander van de Streek', pos: 'AM', value: '€1.6M', x: 50, y: 36 },
+          { number: 7, name: 'Braian Samudio', pos: 'RW', value: '€1.8M', x: 82, y: 38 },
+          { number: 9, name: 'Adolfo Gaich', pos: 'ST', value: '€2.0M', x: 50, y: 46 }
+        ],
+        subs: [
+          { number: 18, name: 'Jakub Kaluzinski', pos: 'CM', value: '€2.5M' },
+          { number: 14, name: 'Emre Uzun', pos: 'AM', value: '€800K' }
+        ]
+      }
+    };
+
+    function getVerifiedTeamLineup(teamName, isHome) {
+      if (!teamName) return null;
+      const lower = teamName.toLowerCase();
+      for (const [key, squad] of Object.entries(KNOWN_SQUADS)) {
+        if (lower.includes(key.toLowerCase())) {
+          return {
+            team: teamName,
+            formation: squad.formation,
+            manager: squad.manager,
+            players: squad.players.map(p => ({
+              ...p,
+              // Deplasman ise y koordinatını ters çevir
+              y: isHome ? p.y : (100 - p.y)
+            })),
+            subs: squad.subs || []
+          };
+        }
+      }
+      // Gerçek kadrosu olmayan maçlar için uydurma kadro üretme!
+      return null;
+    }
+
+    function buildMatchLineups(homeName, awayName) {
+      const homeLineup = getVerifiedTeamLineup(homeName, true);
+      const awayLineup = getVerifiedTeamLineup(awayName, false);
+
+      // Sadece iki tarafın da veya en az birinin gerçek kadrosu varsa dön, yoksa null
+      if (!homeLineup && !awayLineup) {
+        return null;
+      }
+
+      return {
+        home: homeLineup,
+        away: awayLineup
+      };
+    }
+
+    async function executeLiveScrape() {
+      let collectedMatches = [];
+
+      // ─────────────────────────────────────────────────────────────
+      // ⭐ MACKOLİK CANLI VERİ — vd.mackolik.com
+      //    Sıra: 1. Doğrudan API  2. Backend proxy  3. corsproxy.io  4. allorigins.win
+      // ─────────────────────────────────────────────────────────────
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      const dateStr = `${dd}/${mm}/${yyyy}`;
+      const directUrl = `https://vd.mackolik.com/livedata?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`;
+
+      function parseMackolikRaw(rawArr) {
+        return rawArr.map(mac => ({
+          id: String(mac[0]),
+          evSahibi: mac[8] || mac[2] || 'Ev Sahibi',
+          deplasman: mac[10] || mac[4] || 'Deplasman',
+          skorEv: mac[14] ?? mac[12] ?? 0,
+          skorDep: mac[15] ?? mac[13] ?? 0,
+          durum: mac[18] || mac[6] || '',
+          saat: mac[11] || mac[16] || '00:00',
+          lig: mac[5] || 'FUTBOL',
+        }));
+      }
+
+      try {
+        let mackMatches = [];
+
+        // 1. ⚡ Direkt vd.mackolik.com (en hızlı, no proxy)
+        try {
+          const resp = await fetch(directUrl, {
+            headers: { 'Referer': 'https://www.mackolik.com/' },
+            signal: AbortSignal.timeout(5000)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const rawArr = data.e || data.m;
+            if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
+          }
+        } catch(e) {}
+
+        // 2. Backend proxy (/api/canli-skorlar)
+        if (mackMatches.length === 0) {
+          try {
+            const resp = await fetch('/api/canli-skorlar', { cache: 'no-store' });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (Array.isArray(data) && data.length > 0) mackMatches = data;
+            }
+          } catch(e) {}
+        }
+
+        // 3. corsproxy.io
+        if (mackMatches.length === 0) {
+          try {
+            const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`, { signal: AbortSignal.timeout(6000) });
+            if (resp.ok) {
+              const data = await resp.json();
+              const rawArr = data.e || data.m;
+              if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
+            }
+          } catch(e) {}
+        }
+
+        // 4. allorigins.win
+        if (mackMatches.length === 0) {
+          try {
+            const resp = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`, { signal: AbortSignal.timeout(6000) });
+            if (resp.ok) {
+              const data = await resp.json();
+              const rawArr = data.e || data.m;
+              if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
+            }
+          } catch(e) {}
+        }
+
+        // Mackolik maçlarını listeye ekle
+        if (Array.isArray(mackMatches) && mackMatches.length > 0) {
+          mackMatches.forEach(mac => {
+            const homeName = mac.evSahibi || mac.homeTeam || 'Ev Sahibi';
+            const awayName = mac.deplasman || mac.awayTeam || 'Deplasman';
+            const statusRaw = String(mac.durum || mac.status || '');
+            const cleanSt = statusRaw.replace("'", '');
+            const isFinished = statusRaw === 'MS' || statusRaw === 'Bitti';
+            const isLive = !isFinished && statusRaw !== 'ERT' && statusRaw !== 'Kapatıldı' &&
+                           (statusRaw === 'IY' || statusRaw === 'İY' || !isNaN(parseInt(cleanSt, 10)));
+            const homeScore = parseInt(mac.skorEv ?? mac.homeScore ?? '0', 10) || 0;
+            const awayScore = parseInt(mac.skorDep ?? mac.awayScore ?? '0', 10) || 0;
+            const minute = parseInt(cleanSt, 10) || ((statusRaw === 'IY' || statusRaw === 'İY') ? 45 : (isFinished ? 90 : 0));
+            const leagueName = mac.lig || mac.league || 'MACKOLİK: FUTBOL';
+            const lineups = buildMatchLineups(homeName, awayName);
+
+            collectedMatches.push({
+              id: `mackolik-${mac.id}`,
+              league: leagueName,
+              homeTeam: homeName,
+              awayTeam: awayName,
+              homeScore: homeScore,
+              awayScore: awayScore,
+              minute: minute,
+              status: isFinished ? 'MS' : (isLive ? 'CANLI' : (statusRaw || 'PLANLI')),
+              isLive: isLive,
+              stadium: `${homeName} Stadyumu`,
+              referee: 'Hakem',
+              homeManager: (lineups && lineups.home) ? lineups.home.manager : 'Teknik Direktör',
+              awayManager: (lineups && lineups.away) ? lineups.away.manager : 'Teknik Direktör',
+              homeMarketValueTotal: (lineups && lineups.home) ? '€120M' : '€25M',
+              awayMarketValueTotal: (lineups && lineups.away) ? '€110M' : '€20M',
+              isSakipSpecial: isTurkishGiant({ homeTeam: homeName, awayTeam: awayName }),
+              odds: { '1': 1.85, 'X': 3.25, '2': 3.75 },
+              lineups: lineups,
+              stats: {
+                possession: [52, 48],
+                shotsTotal: [10, 8],
+                shotsOnTarget: [5, 4],
+                expectedGoals: ['1.42', '1.18'],
+                corners: [4, 3],
+                fouls: [12, 11]
+              },
+              events: []
+            });
+          });
+        }
+      } catch (mackErr) {}
+
+      if (collectedMatches.length === 0) return 0;
+
+      // ─────────────────────────────────────────────────────────────
+      // F) SADECE SCRAPER: Tüm maçları canlı ağdan gelenlerle yenile
+      // ─────────────────────────────────────────────────────────────
+      matchesData = {};
+
+      // ID tekilleştirme (aynı maç tekrar gelmesin)
+      const seenMatchPairs = new Set();
+      collectedMatches.forEach(cur => {
+        const pairKey = `${cur.homeTeam}-${cur.awayTeam}`.toLowerCase();
+        if (seenMatchPairs.has(pairKey)) return;
+        seenMatchPairs.add(pairKey);
+
+        matchesData[cur.id] = cur;
+
+        // Change Detector (Gol ve Dakika Algısı)
+        const prev = clientScraperPrevious.get(cur.id);
+        if (prev) {
+          const isGoal = cur.homeScore > prev.homeScore || cur.awayScore > prev.awayScore;
+          if (isGoal || cur.minute !== prev.minute || cur.status !== prev.status) {
+            cur.event = isGoal ? 'GOAL' : 'TICK';
+            cur.scoringTeam = cur.homeScore > prev.homeScore ? cur.homeTeam : cur.awayTeam;
+            cur.newScore = `${cur.homeScore}-${cur.awayScore}`;
+            handleLiveScoreUpdate(cur);
+          }
+        }
+        clientScraperPrevious.set(cur.id, cur);
+      });
+
+      // Durum rozetini güncelle
+      const liveCount = Object.values(matchesData).filter(m => isMatchLive(m)).length;
+      const totalCount = Object.keys(matchesData).length;
+      const badge = document.getElementById('scraperStatusBadge');
+      if (badge) {
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Scraper: ${liveCount} Canlı / ${totalCount} Toplam Maç`;
+      }
+
+      renderMatchList();
+      updateScoreTicker();
+
+      // En üstteki maçın detay paneline otomatik seçilmesi
+      if (!activeMatchId || !matchesData[activeMatchId]) {
+        const firstGiant = Object.values(matchesData).find(m => isTurkishGiant(m));
+        const firstMatch = firstGiant || Object.values(matchesData)[0];
+        if (firstMatch) {
+          selectActiveMatch(firstMatch.id);
+        }
+      }
+
+      return totalCount;
+    }
+
+    async function startClientLiveScraper() {
+      await executeLiveScrape();
+      setInterval(executeLiveScrape, 12000);
+    }
+
+    // Butonla Manuel Anlık Tarama
+    async function manualTriggerScraper() {
+      const btn = document.getElementById('manualScrapeBtn');
+      if (btn) {
+        btn.innerHTML = '<span>⏳ Canlı Ağ Taranıyor...</span>';
+        btn.disabled = true;
+      }
+
+      const count = await executeLiveScrape();
+
+      if (btn) {
+        btn.innerHTML = `<span>✅ ${count} Canlı Maç Çekildi!</span>`;
+        setTimeout(() => {
+          btn.innerHTML = '<span>🔄 Anlık Skorları Tara</span>';
+          btn.disabled = false;
+        }, 2500);
+      }
+    }
+
+    // Son Dakika Bandını Güncelle ve Animasyonlu Bildir
+    function displayBreakingNews(item) {
+      if (!item) return;
+      const container = document.getElementById('breakingNewsContainer');
+      const titleEl   = document.getElementById('breakingNewsTitle');
+      const sourceEl  = document.getElementById('breakingNewsSource');
+      const linkEl    = document.getElementById('breakingNewsLink');
+      const timeEl    = document.getElementById('breakingNewsTime');
+
+      if (titleEl)  titleEl.innerText  = item.title || '';
+      if (sourceEl) {
+        sourceEl.innerText = `[${item.source || 'Spor'}]`;
+        sourceEl.style.color = item.color || '#facc15';
+      }
+      if (linkEl && item.link) linkEl.href = item.link;
+      if (timeEl) timeEl.innerText = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+      // Dikkat çekici yanıp sönme animasyonu
+      if (container) {
+        container.classList.add('ring-2', 'ring-red-500', 'bg-red-900/60');
+        setTimeout(() => {
+          container.classList.remove('ring-2', 'ring-red-500', 'bg-red-900/60');
+        }, 3500);
+      }
+
+      // Sesli bildirim (düdük / gong)
+      playWhistleSound();
+    }
+
+    async function handleSearch(q) {
+      const box = document.getElementById('searchDropdown');
+      if (!q || q.length < 2) { box.classList.add('hidden'); return; }
+
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const { results } = await res.json();
+      if (!results || results.length === 0) {
+        box.innerHTML = '<div class="p-3 text-xs text-zinc-500">Sonuç bulunamadı</div>';
+        box.classList.remove('hidden');
+        return;
+      }
+
+      box.innerHTML = results.map(r => `
+        <div onclick="selectSearchResult('${r.type}', '${r.slug}')" class="p-2.5 hover:bg-zinc-800 cursor-pointer border-b border-mackolik flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            ${r.photo ? `<img src="${r.photo}" class="w-6 h-6 rounded-full object-cover" />` : ''}
+            <div>
+              <div class="font-bold text-white">${r.title}</div>
+              <div class="text-[10px] text-zinc-400">${r.subtitle}</div>
+            </div>
+          </div>
+          <span class="text-[9px] bg-zinc-800 text-yellow-400 px-1.5 py-0.5 rounded font-black border border-zinc-700">${r.type}</span>
+        </div>
+      `).join('');
+      box.classList.remove('hidden');
+    }
+
+    function selectSearchResult(type, slug) {
+      document.getElementById('searchDropdown').classList.add('hidden');
+      if (type === 'OYUNCU') {
+        switchMainTab('transfers');
+        loadPlayerProfile(slug.replace('/players/', ''));
+      } else if (type === 'MAÇ') {
+        switchMainTab('matches');
+        selectActiveMatch(slug.replace('/matches/', ''));
+      } else if (type === 'HABER') {
+        switchMainTab('news');
+        openNewsModal(slug.replace('/news/', ''));
+      }
+    }
+
+    async function loadInitialBreakingNews() {
+      try {
+        const res = await fetch('/api/breaking-news');
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          displayBreakingNews(json.data[0]);
+        }
+      } catch(e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      connectLiveScoreSSE();
+      loadNews();
+      loadStandings();
+      loadInitialBreakingNews();
+      loadTransfersHub();
+      startClientLiveScraper();
+    });
+  </script>
+</body>
+</html>

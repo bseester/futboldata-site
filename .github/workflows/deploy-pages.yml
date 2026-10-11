@@ -1,0 +1,76 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'site/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure API endpoint
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          value = os.environ.get('API_BASE_URL', '').strip().rstrip('/')
+          with open('site/api-config.js', 'w', encoding='utf-8') as config:
+              config.write('window.FUTBOLDATA_API_BASE_URL = ' + json.dumps(value) + ';\n')
+
+          page = Path('index.html').read_text(encoding='utf-8')
+          bridge = '''
+          <script src="./api-config.js"></script>
+          <script>
+            (() => {
+              const apiBase = String(window.FUTBOLDATA_API_BASE_URL || '').replace(/\\/+$/, '');
+              if (!apiBase) return;
+              const apiUrl = value => {
+                const url = typeof value === 'string' ? value : value?.url;
+                return typeof url === 'string' && url.startsWith('/api/') ? apiBase + url : value;
+              };
+              const nativeFetch = window.fetch.bind(window);
+              window.fetch = (input, init) => nativeFetch(apiUrl(input), init);
+              const NativeEventSource = window.EventSource;
+              window.EventSource = class extends NativeEventSource {
+                constructor(url, options) { super(apiUrl(url), options); }
+              };
+            })();
+          </script>
+          '''
+          Path('site/index.html').write_text(page.replace('<head>', '<head>' + bridge, 1), encoding='utf-8')
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload frontend only
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,1 @@
+window.FUTBOLDATA_API_BASE_URL = "";
