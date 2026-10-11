@@ -1877,7 +1877,11 @@
       try {
         const homeParam = encodeURIComponent(match?.homeTeam || '');
         const awayParam = encodeURIComponent(match?.awayTeam || '');
-        const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}`, { cache: 'no-store' });
+        const matchDate = match?.date || new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        const dateParam = encodeURIComponent(matchDate);
+        const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}&date=${dateParam}`, { cache: 'no-store' });
         if (!resp.ok) return null;
         const data = await resp.json();
         // Only accept lineups explicitly marked as verified by a provider.
@@ -1925,10 +1929,10 @@
       if (m.lineups && m.lineups.confirmed === true && m.lineups.home && m.lineups.home.players && m.lineups.home.players.length > 0) {
         prefetchLineupPhotos(m.lineups);
         renderTacticalPitch(m.lineups);
-        if (lineupsTab) lineupsTab.innerHTML = '🟢 MACKOLİK KADROSU';
+        if (lineupsTab) lineupsTab.innerHTML = `🟢 ${m.lineups.source || 'RESMÎ'} KADRO`;
       } else {
-        if (lineupsTab) lineupsTab.innerHTML = 'KADRO BİLGİSİ';
-        renderTacticalPitch(null);
+        if (lineupsTab) lineupsTab.innerHTML = 'KADRO ARANIYOR';
+        renderTacticalPitch(null, 'loading');
         fetchMackolikLineups(matchId, m).then(mkLineups => {
           if (mkLineups) {
             if (matchesData[matchId]) {
@@ -1937,8 +1941,11 @@
             if (activeMatchId === matchId) {
               prefetchLineupPhotos(mkLineups);
               renderTacticalPitch(mkLineups);
-              if (lineupsTab) lineupsTab.innerHTML = '🟢 RESMİ KADRO';
+              if (lineupsTab) lineupsTab.innerHTML = `🟢 ${mkLineups.source || 'RESMÎ'} KADRO`;
             }
+          } else if (activeMatchId === matchId) {
+            renderTacticalPitch(null, 'unavailable');
+            if (lineupsTab) lineupsTab.innerHTML = 'KADRO BULUNAMADI';
           }
         });
       }
@@ -1954,19 +1961,16 @@
 
 
     // 2D SAHA: HER OYUNCU KENDİ GERÇEK FOTOĞRAFIYLA
-    function renderTacticalPitch(lineups) {
+    function renderTacticalPitch(lineups, state = 'unavailable') {
       const container = document.getElementById('pitchPlayersContainer');
       container.innerHTML = '';
 
       if (!lineups || !lineups.home || !lineups.away) {
         container.innerHTML = `
           <div class="flex flex-col items-center justify-center h-full text-center p-6 space-y-3 z-30 relative">
-            <span class="text-3xl animate-pulse">📋</span>
-            <div class="text-white font-black text-sm">Resmi Kadrolar Henüz Açıklanmadı</div>
-            <p class="text-zinc-400 text-xs max-w-xs">Bu karşılaşma için teknik ekipler tarafından 11'ler henüz federasyona ve sisteme bildirilmemiştir.</p>
-            <span class="text-[10px] bg-zinc-900/90 text-yellow-400 font-bold px-3 py-1 rounded-full border border-zinc-800">
-              Maç saatine 1 saat kala güncellenir
-            </span>
+            <span class="text-3xl ${state === 'loading' ? 'animate-pulse' : ''}">${state === 'loading' ? '🔎' : '📋'}</span>
+            <div class="text-white font-black text-sm">${state === 'loading' ? 'Güncel kadro aranıyor' : 'Kadro kaynağında veri yok'}</div>
+            <p class="text-zinc-400 text-xs max-w-xs">${state === 'loading' ? 'Maç, takım adları ve tarih üzerinden kadro sağlayıcılarında aranıyor.' : 'Bu maç için sağlayıcılardan doğrulanmış ilk 11 alınamadı. Veri geldiğinde otomatik görünür.'}</p>
           </div>
         `;
         document.getElementById('homeSubsList').innerHTML = '<div class="text-zinc-500 text-[11px] py-1 text-center">Yedek kulübesi açıklanmadı</div>';
