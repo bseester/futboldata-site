@@ -1959,6 +1959,7 @@
 
       renderEventsTimeline(m.events);
       renderStatsBars(m.stats);
+      loadMackolikMatchStats(matchId);
 
       // 1. Mackolik Kadro Entegrasyonu:
       const lineupsTab = document.getElementById('subtab-btn-lineups');
@@ -2120,19 +2121,18 @@
 
     function renderStatsBars(stats) {
       const container = document.getElementById('statsBarsContainer');
-      if (!stats) return;
-
-      const items = [
-        { label: 'Topla Oynama', home: stats.possession[0] + '%', away: stats.possession[1] + '%', homeVal: stats.possession[0], awayVal: stats.possession[1] },
-        { label: 'Toplam Şut', home: stats.shotsTotal[0], away: stats.shotsTotal[1], homeVal: stats.shotsTotal[0], awayVal: stats.shotsTotal[1] },
-        { label: 'İsabetli Şut', home: stats.shotsOnTarget[0], away: stats.shotsOnTarget[1], homeVal: stats.shotsOnTarget[0], awayVal: stats.shotsOnTarget[1] },
-        { label: 'Beklenen Gol (xG)', home: stats.expectedGoals[0], away: stats.expectedGoals[1], homeVal: parseFloat(stats.expectedGoals[0]) * 10, awayVal: parseFloat(stats.expectedGoals[1]) * 10 },
-        { label: 'Köşe Vuruşu (Korner)', home: stats.corners[0], away: stats.corners[1], homeVal: stats.corners[0], awayVal: stats.corners[1] }
-      ];
+      if (!stats?.items?.length) {
+        container.innerHTML = '<div class="text-zinc-500 text-xs p-4 text-center">Mackolik istatistikleri bu maç için henüz yayınlamadı.</div>';
+        return;
+      }
+      const items = stats.items;
 
       container.innerHTML = items.map(it => {
-        const total = (it.homeVal + it.awayVal) || 1;
-        const homePct = Math.round((it.homeVal / total) * 100);
+        const parseValue = value => Number.parseFloat(String(value).replace('%', '').replace(',', '.').split('/')[0]) || 0;
+        const homeVal = parseValue(it.home);
+        const awayVal = parseValue(it.away);
+        const total = (homeVal + awayVal) || 1;
+        const homePct = Math.round((homeVal / total) * 100);
         return `
           <div>
             <div class="flex justify-between items-center text-xs mb-1 font-bold">
@@ -2147,6 +2147,30 @@
           </div>
         `;
       }).join('');
+    }
+
+    const mackolikStatsCache = new Map();
+    const mackolikStatsRequests = new Map();
+    async function loadMackolikMatchStats(matchId) {
+      const cached = mackolikStatsCache.get(matchId);
+      if (cached && Date.now() - cached.time < 30_000) {
+        if (cached.stats && matchesData[matchId]) matchesData[matchId].stats = cached.stats;
+        if (cached.stats && activeMatchId === matchId) renderStatsBars(cached.stats);
+        return;
+      }
+      if (mackolikStatsRequests.has(matchId)) return;
+      const request = apiFetch(`/api/mackolik/match-stats/${encodeURIComponent(matchId)}`, { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+          const stats = data?.success && Array.isArray(data.items) && data.items.length ? { source: 'Mackolik', items: data.items } : null;
+          mackolikStatsCache.set(matchId, { stats, time: Date.now() });
+          if (!stats) return;
+          if (matchesData[matchId]) matchesData[matchId].stats = stats;
+          if (activeMatchId === matchId) renderStatsBars(stats);
+        })
+        .catch(() => {})
+        .finally(() => mackolikStatsRequests.delete(matchId));
+      mackolikStatsRequests.set(matchId, request);
     }
 
     // =============================================================
@@ -2943,6 +2967,7 @@
     // ⚡ CANLI SKOR SCRAPER (100% GERÇEK CANLI AĞ — SIFIR MANUEL MAÇ)
     // ========================================================
     let clientScraperPrevious = new Map();
+    const clientScraperEventsByMatch = new Map();
 
 
     // Canlı skor akışı kadro bilgisini sağlamaz; doğrulanmamış kadro üretme.
@@ -3072,15 +3097,8 @@
               isSakipSpecial: isTurkishGiant({ homeTeam: homeName, awayTeam: awayName }),
               odds: { '1': 1.85, 'X': 3.25, '2': 3.75 },
               lineups: lineups,
-              stats: {
-                possession: [52, 48],
-                shotsTotal: [10, 8],
-                shotsOnTarget: [5, 4],
-                expectedGoals: ['1.42', '1.18'],
-                corners: [4, 3],
-                fouls: [12, 11]
-              },
-              events: []
+              stats: null,
+              events: clientScraperEventsByMatch.get(`mackolik-${mac.id}`) || []
             });
           });
         }
@@ -3132,6 +3150,13 @@
             cur.event = isGoal ? 'GOAL' : 'TICK';
             cur.scoringTeam = cur.homeScore > prev.homeScore ? cur.homeTeam : cur.awayTeam;
             cur.newScore = `${cur.homeScore}-${cur.awayScore}`;
+            if (isGoal) {
+              const event = { id: `${cur.id}-${cur.newScore}`, minute: cur.minute || 0, type: 'GOAL', team: cur.scoringTeam, detail: `Gol • Mackolik canlı skor akışı • ${cur.newScore}` };
+              const history = clientScraperEventsByMatch.get(cur.id) || [];
+              if (!history.some(item => item.id === event.id)) history.unshift(event);
+              clientScraperEventsByMatch.set(cur.id, history.slice(0, 20));
+              cur.events = clientScraperEventsByMatch.get(cur.id);
+            }
             handleLiveScoreUpdate(cur);
           }
         }
