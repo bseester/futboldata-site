@@ -1170,19 +1170,27 @@
       // Özel takım bulma
       let targetTeam = null;
       if (currentFixturesLeague === 'superlig') {
-        targetTeam = standings.find(s => s.team && s.team.includes('Antalya')) || standings[1];
+        targetTeam = standings.find(s => s.team && s.team.includes('Antalya'));
       } else if (currentFixturesLeague === 'premier') {
-        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('manchester city')) || standings[1];
+        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('manchester city'));
       } else if (currentFixturesLeague === 'laliga') {
-        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('real madrid')) || standings[1];
+        targetTeam = standings.find(s => s.team && s.team.toLowerCase().includes('real madrid'));
       }
 
+      const rankEl = document.getElementById('antalyasporRankDisplay');
+      const pointsEl = document.getElementById('antalyasporPointsDisplay');
+      const recordEl = document.getElementById('antalyasporRecordDisplay');
+      const specialLogoEl = document.getElementById('standingsSpecialLogo');
       if (targetTeam) {
-        document.getElementById('antalyasporRankDisplay').innerText = `${targetTeam.rank}. Sıra`;
-        document.getElementById('antalyasporPointsDisplay').innerText = `${targetTeam.points} Puan`;
-        document.getElementById('antalyasporRecordDisplay').innerText = `${targetTeam.played} Maç • ${targetTeam.win}G ${targetTeam.draw}B ${targetTeam.loss}M (AV: ${targetTeam.gd > 0 ? '+' + targetTeam.gd : targetTeam.gd})`;
-        const specialLogoEl = document.getElementById('standingsSpecialLogo');
+        if (rankEl) rankEl.innerText = `${targetTeam.rank}. Sıra`;
+        if (pointsEl) pointsEl.innerText = `${targetTeam.points} Puan`;
+        if (recordEl) recordEl.innerText = `${targetTeam.played} Maç • ${targetTeam.win}G ${targetTeam.draw}B ${targetTeam.loss}M (AV: ${targetTeam.gd > 0 ? '+' + targetTeam.gd : targetTeam.gd})`;
         if (specialLogoEl) specialLogoEl.innerHTML = renderTeamLogoHtml(targetTeam.team, 'w-7 h-7');
+      } else {
+        if (rankEl) rankEl.innerText = 'Bu sezon ligde yok';
+        if (pointsEl) pointsEl.innerText = '—';
+        if (recordEl) recordEl.innerText = `${meta.specialSub} puan tablosunda yer almıyor`;
+        if (specialLogoEl) specialLogoEl.innerHTML = renderTeamLogoHtml(meta.specialLabel, 'w-7 h-7');
       }
     }
 
