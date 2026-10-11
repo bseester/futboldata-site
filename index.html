@@ -1555,15 +1555,16 @@
     function renderFixtureRow(m, isSpecialBox) {
       const isGs = (m.homeTeam && m.homeTeam.includes('Galatasaray')) || (m.awayTeam && m.awayTeam.includes('Galatasaray'));
       const isAnt = (m.homeTeam && m.homeTeam.includes('Antalyaspor')) || (m.awayTeam && m.awayTeam.includes('Antalyaspor'));
-      const isLive = m.status === 'CANLI' || (m.minute && (m.minute === 'İY' || m.minute === 'IY' || m.minute.includes("'")));
-      const isMS = m.status === 'MS' || m.status === 'Bitti';
+      const matchStatus = classifyLiveStatus(m.durum || m.status || m.dakika || '');
+      const isLive = matchStatus.isLive;
+      const isMS = !isLive && matchStatus.status === 'MS';
 
       let statusBadgeHtml = '';
       if (isLive) {
         statusBadgeHtml = `
           <span class="inline-flex items-center gap-1 bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black font-mono text-[11px] animate-pulse">
             <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            ${m.minute || 'CANLI'}
+            ${m.minute || matchStatus.minute || 'CANLI'}
           </span>
         `;
       } else if (isMS) {
