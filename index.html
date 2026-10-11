@@ -789,7 +789,7 @@
 
         <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto text-xs font-bold">
           <button onclick="setStandingsZoneFilter('ALL')" id="btnZone-ALL" class="zone-filter-btn px-3 py-1.5 rounded-lg bg-yellow-400 text-black transition whitespace-nowrap">
-            Tüm Takımlar (19)
+            Tüm Takımlar (0)
           </button>
           <button onclick="setStandingsZoneFilter('EUROPE')" id="btnZone-EUROPE" class="zone-filter-btn px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition whitespace-nowrap">
             Avrupa Potası (İlk 4)
@@ -1122,11 +1122,15 @@
       if (subEl)   subEl.innerText   = meta.subtitle;
       if (iconEl)  iconEl.innerText  = meta.icon;
 
+      const standingsBody = document.getElementById('fixtureStandingsBody');
+      if (standingsBody) standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-zinc-500 font-sans text-xs">Puan durumu yükleniyor...</td></tr>';
+
       try {
         const res = await fetch(`/api/standings?league=${league}`);
         const json = await res.json();
-        if (json.success && json.data && json.data.length > 0) {
-          renderStandingsTable(json.data);
+        const standings = Array.isArray(json.standings) ? json.standings : (Array.isArray(json.data) ? json.data : []);
+        if (json.success && standings.length > 0) {
+          renderStandingsTable(standings);
           return;
         }
 
@@ -1135,9 +1139,12 @@
         const fJson = await fRes.json();
         if (fJson.success && fJson.standings && fJson.standings.length > 0) {
           renderStandingsTable(fJson.standings);
+        } else if (standingsBody) {
+          standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-amber-400 font-sans text-xs">Puan durumu şu an alınamıyor. Yenilemek için 🔄 düğmesine dokun.</td></tr>';
         }
       } catch(e) {
         console.error('Puan durumu yüklenemedi:', e);
+        if (standingsBody) standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-red-400 font-sans text-xs">Puan durumu alınamadı. Bağlantını kontrol edip yeniden dene.</td></tr>';
       }
     }
 
@@ -1217,6 +1224,8 @@
 
     function renderStandingsTable(standings) {
       allStandingsList = standings || [];
+      const allTeamsButton = document.getElementById('btnZone-ALL');
+      if (allTeamsButton) allTeamsButton.innerText = `Tüm Takımlar (${allStandingsList.length})`;
       updateStandingsLeaderCards(allStandingsList);
       applyStandingsFilters();
     }
@@ -2464,24 +2473,7 @@
 
     // Puan Durumu
     async function loadStandings() {
-      try {
-        const res = await fetch('/api/standings');
-        const json = await res.json();
-        standingsData = json.data || [];
-        const tbody = document.getElementById('standingsTableBody');
-        tbody.innerHTML = standingsData.map(s => `
-          <tr class="hover:bg-zinc-800/60 transition ${s.team === 'Galatasaray' ? 'bg-yellow-400/10 font-bold' : ''}">
-            <td class="py-2 px-2 text-center font-bold ${s.rank <= 2 ? 'text-yellow-400' : 'text-zinc-400'}">${s.rank}</td>
-            <td class="py-2 px-3 font-semibold text-white">${s.team}</td>
-            <td class="py-2 px-2 text-center text-zinc-400">${s.played}</td>
-            <td class="py-2 px-2 text-center text-zinc-400">${s.win}</td>
-            <td class="py-2 px-2 text-center text-zinc-400">${s.draw}</td>
-            <td class="py-2 px-2 text-center text-zinc-400">${s.loss}</td>
-            <td class="py-2 px-2 text-center text-zinc-300 font-mono">${s.gd > 0 ? '+' + s.gd : s.gd}</td>
-            <td class="py-2 px-2 text-center font-black text-yellow-400 font-mono">${s.points}</td>
-          </tr>
-        `).join('');
-      } catch(e) {}
+      return loadFixtures(currentFixturesLeague || 'superlig');
     }
 
     // ========================================================
