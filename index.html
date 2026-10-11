@@ -1043,6 +1043,12 @@
           : 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition';
       });
 
+      document.querySelectorAll('.mobile-tab-link').forEach(button => {
+        const active = button.dataset.mobileTab === t;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+
       const tabEl = document.getElementById(`tab-${t}`);
       if (tabEl) tabEl.classList.remove('hidden');
 
@@ -1874,7 +1880,9 @@
         const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}`, { cache: 'no-store' });
         if (!resp.ok) return null;
         const data = await resp.json();
-        if (data && data.lineups) {
+        // Only accept lineups explicitly marked as verified by a provider.
+        // The previous backend returned a hard-coded squad as if it were official.
+        if (data && data.confirmed === true && data.lineups) {
           return data.lineups;
         }
       } catch (e) {
@@ -1914,12 +1922,13 @@
 
       // 1. Mackolik Kadro Entegrasyonu:
       const lineupsTab = document.getElementById('subtab-btn-lineups');
-      if (m.lineups && m.lineups.home && m.lineups.home.players && m.lineups.home.players.length > 0) {
+      if (m.lineups && m.lineups.confirmed === true && m.lineups.home && m.lineups.home.players && m.lineups.home.players.length > 0) {
         prefetchLineupPhotos(m.lineups);
         renderTacticalPitch(m.lineups);
         if (lineupsTab) lineupsTab.innerHTML = '🟢 MACKOLİK KADROSU';
       } else {
-        if (lineupsTab) lineupsTab.innerHTML = '⏳ MACKOLİK KADROSU YÜKLENİYOR';
+        if (lineupsTab) lineupsTab.innerHTML = 'KADRO BİLGİSİ';
+        renderTacticalPitch(null);
         fetchMackolikLineups(matchId, m).then(mkLineups => {
           if (mkLineups) {
             if (matchesData[matchId]) {
@@ -1928,7 +1937,7 @@
             if (activeMatchId === matchId) {
               prefetchLineupPhotos(mkLineups);
               renderTacticalPitch(mkLineups);
-              if (lineupsTab) lineupsTab.innerHTML = '🟢 MACKOLİK KADROSU';
+              if (lineupsTab) lineupsTab.innerHTML = '🟢 RESMİ KADRO';
             }
           }
         });
@@ -2874,145 +2883,9 @@
     let clientScraperPrevious = new Map();
 
 
-    // 📋 Gerçekçi 11'ler ve Saha Koordinatları (Lineups) Üretici
-    const KNOWN_SQUADS = {
-      'Galatasaray': {
-        formation: '4-2-3-1', manager: 'Okan Buruk',
-        players: [
-          { number: 1, name: 'Muslera', pos: 'GK', value: '€1.5M', x: 50, y: 7 },
-          { number: 4, name: 'Jakobs', pos: 'LB', value: '€8.0M', x: 15, y: 17 },
-          { number: 42, name: 'Abdülkerim', pos: 'CB', value: '€7.5M', x: 38, y: 15 },
-          { number: 6, name: 'Davinson Sanchez', pos: 'CB', value: '€18.0M', x: 62, y: 15 },
-          { number: 23, name: 'Kaan Ayhan', pos: 'RB', value: '€4.5M', x: 85, y: 17 },
-          { number: 34, name: 'Lucas Torreira', pos: 'DM', value: '€15.0M', x: 35, y: 27 },
-          { number: 20, name: 'Gabriel Sara', pos: 'CM', value: '€18.0M', x: 65, y: 27 },
-          { number: 11, name: 'Yunus Akgün', pos: 'LW', value: '€6.5M', x: 18, y: 38 },
-          { number: 10, name: 'Dries Mertens', pos: 'AM', value: '€1.8M', x: 50, y: 36 },
-          { number: 53, name: 'Barış Alper Yılmaz', pos: 'RW', value: '€20.0M', x: 82, y: 38 },
-          { number: 45, name: 'Victor Osimhen', pos: 'ST', value: '€75.0M', x: 50, y: 46 }
-        ],
-        subs: [
-          { number: 9, name: 'Mauro Icardi', pos: 'ST', value: '€15M' },
-          { number: 22, name: 'Hakim Ziyech', pos: 'RW', value: '€7M' }
-        ]
-      },
-      'Fenerbahçe': {
-        formation: '4-2-3-1', manager: 'Jose Mourinho',
-        players: [
-          { number: 40, name: 'Dominik Livakovic', pos: 'GK', value: '€11.0M', x: 50, y: 92 },
-          { number: 24, name: 'Jayden Oosterwolde', pos: 'LB', value: '€13.0M', x: 15, y: 80 },
-          { number: 6, name: 'Alexander Djiku', pos: 'CB', value: '€9.0M', x: 38, y: 82 },
-          { number: 4, name: 'Çağlar Söyüncü', pos: 'CB', value: '€7.5M', x: 62, y: 82 },
-          { number: 21, name: 'Bright Osayi-Samuel', pos: 'RB', value: '€8.0M', x: 85, y: 80 },
-          { number: 34, name: 'Sofyan Amrabat', pos: 'DM', value: '€22.0M', x: 35, y: 71 },
-          { number: 13, name: 'Fred', pos: 'CM', value: '€15.0M', x: 65, y: 71 },
-          { number: 97, name: 'Allan Saint-Maximin', pos: 'LW', value: '€18.0M', x: 18, y: 60 },
-          { number: 53, name: 'Sebastian Szymanski', pos: 'AM', value: '€19.0M', x: 50, y: 62 },
-          { number: 10, name: 'Dusan Tadic', pos: 'RW', value: '€3.5M', x: 82, y: 60 },
-          { number: 9, name: 'Edin Dzeko', pos: 'ST', value: '€2.5M', x: 50, y: 52 }
-        ],
-        subs: [
-          { number: 19, name: 'Youssef En-Nesyri', pos: 'ST', value: '€22M' },
-          { number: 17, name: 'İrfan Can Kahveci', pos: 'RW', value: '€10M' }
-        ]
-      },
-      'Beşiktaş': {
-        formation: '4-2-3-1', manager: 'Giovanni van Bronckhorst',
-        players: [
-          { number: 34, name: 'Mert Günok', pos: 'GK', value: '€1.2M', x: 50, y: 7 },
-          { number: 26, name: 'Arthur Masuaku', pos: 'LB', value: '€3.5M', x: 15, y: 17 },
-          { number: 14, name: 'Felix Uduokhai', pos: 'CB', value: '€7.0M', x: 38, y: 15 },
-          { number: 3, name: 'Gabriel Paulista', pos: 'CB', value: '€2.5M', x: 62, y: 15 },
-          { number: 2, name: 'Jonas Svensson', pos: 'RB', value: '€1.8M', x: 85, y: 17 },
-          { number: 83, name: 'Gedson Fernandes', pos: 'CM', value: '€17.0M', x: 35, y: 27 },
-          { number: 28, name: 'Al-Musrati', pos: 'DM', value: '€14.0M', x: 65, y: 27 },
-          { number: 7, name: 'Milot Rashica', pos: 'LW', value: '€7.5M', x: 18, y: 38 },
-          { number: 27, name: 'Rafa Silva', pos: 'AM', value: '€14.0M', x: 50, y: 36 },
-          { number: 18, name: 'Joao Mario', pos: 'RW', value: '€4.0M', x: 82, y: 38 },
-          { number: 17, name: 'Ciro Immobile', pos: 'ST', value: '€4.0M', x: 50, y: 46 }
-        ],
-        subs: [
-          { number: 9, name: 'Semih Kılıçsoy', pos: 'ST', value: '€15M' },
-          { number: 71, name: 'Jean Onana', pos: 'CM', value: '€3.5M' }
-        ]
-      },
-      'Trabzonspor': {
-        formation: '4-2-3-1', manager: 'Şenol Güneş',
-        players: [
-          { number: 1, name: 'Uğurcan Çakır', pos: 'GK', value: '€8.5M', x: 50, y: 7 },
-          { number: 18, name: 'Eren Elmalı', pos: 'LB', value: '€4.0M', x: 15, y: 17 },
-          { number: 44, name: 'Arseniy Batagov', pos: 'CB', value: '€2.0M', x: 38, y: 15 },
-          { number: 15, name: 'Stefan Savic', pos: 'CB', value: '€2.5M', x: 62, y: 15 },
-          { number: 77, name: 'Pedro Malheiro', pos: 'RB', value: '€4.5M', x: 85, y: 17 },
-          { number: 6, name: 'Batista Mendy', pos: 'DM', value: '€10.0M', x: 35, y: 27 },
-          { number: 5, name: 'Okay Yokuşlu', pos: 'CM', value: '€2.8M', x: 65, y: 27 },
-          { number: 99, name: 'Mislav Orsic', pos: 'LW', value: '€2.2M', x: 18, y: 38 },
-          { number: 7, name: 'Edin Visca', pos: 'RW', value: '€2.2M', x: 82, y: 38 },
-          { number: 11, name: 'Ozan Tufan', pos: 'AM', value: '€2.8M', x: 50, y: 36 },
-          { number: 17, name: 'Simon Banza', pos: 'ST', value: '€16.0M', x: 50, y: 46 }
-        ],
-        subs: [
-          { number: 9, name: 'Anthony Nwakaeme', pos: 'LW', value: '€1.2M' },
-          { number: 70, name: 'Denis Dragus', pos: 'ST', value: '€4.0M' }
-        ]
-      },
-      'Antalyaspor': {
-        formation: '4-2-3-1', manager: 'Alex de Souza',
-        players: [
-          { number: 1, name: 'Kenan Piric', pos: 'GK', value: '€1.2M', x: 50, y: 7 },
-          { number: 11, name: 'Güray Vural', pos: 'LB', value: '€600K', x: 15, y: 17 },
-          { number: 89, name: 'Veysel Sarı', pos: 'CB', value: '€400K', x: 38, y: 15 },
-          { number: 5, name: 'Thalisson', pos: 'CB', value: '€1.5M', x: 62, y: 15 },
-          { number: 27, name: 'Mert Yılmaz', pos: 'RB', value: '€800K', x: 85, y: 17 },
-          { number: 6, name: 'Soner Dikmen', pos: 'DM', value: '€1.0M', x: 35, y: 27 },
-          { number: 8, name: 'Erdal Rakip', pos: 'CM', value: '€1.8M', x: 65, y: 27 },
-          { number: 10, name: 'Sam Larsson', pos: 'LW', value: '€2.5M', x: 18, y: 38 },
-          { number: 22, name: 'Sander van de Streek', pos: 'AM', value: '€1.6M', x: 50, y: 36 },
-          { number: 7, name: 'Braian Samudio', pos: 'RW', value: '€1.8M', x: 82, y: 38 },
-          { number: 9, name: 'Adolfo Gaich', pos: 'ST', value: '€2.0M', x: 50, y: 46 }
-        ],
-        subs: [
-          { number: 18, name: 'Jakub Kaluzinski', pos: 'CM', value: '€2.5M' },
-          { number: 14, name: 'Emre Uzun', pos: 'AM', value: '€800K' }
-        ]
-      }
-    };
-
-    function getVerifiedTeamLineup(teamName, isHome) {
-      if (!teamName) return null;
-      const lower = teamName.toLowerCase();
-      for (const [key, squad] of Object.entries(KNOWN_SQUADS)) {
-        if (lower.includes(key.toLowerCase())) {
-          return {
-            team: teamName,
-            formation: squad.formation,
-            manager: squad.manager,
-            players: squad.players.map(p => ({
-              ...p,
-              // Deplasman ise y koordinatını ters çevir
-              y: isHome ? p.y : (100 - p.y)
-            })),
-            subs: squad.subs || []
-          };
-        }
-      }
-      // Gerçek kadrosu olmayan maçlar için uydurma kadro üretme!
+    // Canlı skor akışı kadro bilgisini sağlamaz; doğrulanmamış kadro üretme.
+    function buildMatchLineups() {
       return null;
-    }
-
-    function buildMatchLineups(homeName, awayName) {
-      const homeLineup = getVerifiedTeamLineup(homeName, true);
-      const awayLineup = getVerifiedTeamLineup(awayName, false);
-
-      // Sadece iki tarafın da veya en az birinin gerçek kadrosu varsa dön, yoksa null
-      if (!homeLineup && !awayLineup) {
-        return null;
-      }
-
-      return {
-        home: homeLineup,
-        away: awayLineup
-      };
     }
 
     async function executeLiveScrape() {
