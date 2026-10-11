@@ -172,11 +172,11 @@
       <div class="bg-mackolik-card border border-mackolik rounded-xl p-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
         <div class="flex items-center gap-1 sm:gap-2">
           <button onclick="filterMatches('ALL')" id="filter-ALL" class="filter-pill px-3 py-1 rounded font-black bg-yellow-400 text-black">
-            TÜMÜ (0)
+            TÜMÜ (<span id="count-all">0</span>)
           </button>
           <button onclick="filterMatches('CANLI')" id="filter-CANLI" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-red-500 mr-1 animate-pulse"></span>
-            CANLI (0)
+            CANLI (<span id="count-live">0</span>)
           </button>
           <button onclick="filterMatches('FAVORİ')" id="filter-FAVORİ" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
             ⭐ FAVORİLER (<span id="count-favs" class="text-yellow-400">0</span>)
@@ -1673,6 +1673,13 @@
       const container = document.getElementById('matchListContainer');
       container.innerHTML = '';
 
+      const allMatches = Object.values(matchesData);
+      const allCount = document.getElementById('count-all');
+      const liveCountLabel = document.getElementById('count-live');
+      if (allCount) allCount.innerText = String(allMatches.length);
+      if (liveCountLabel) liveCountLabel.innerText = String(allMatches.filter(isMatchLive).length);
+      document.getElementById('count-favs').innerText = String(allMatches.filter(m => favoriteMatchIds.has(m.id)).length);
+
       if (Object.keys(matchesData).length === 0) {
         container.innerHTML = '<div class="rounded-xl border border-zinc-800 bg-mackolik-card p-5 text-center text-sm text-zinc-400">Bugünün maç verisi bekleniyor. Eski maç bilgileri canlı skor olarak gösterilmiyor.</div>';
         return;
@@ -3102,8 +3109,8 @@
       const totalCount = Object.keys(matchesData).length;
       const badge = document.getElementById('scraperStatusBadge');
       if (badge) {
-        const updatedAt = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' }).format(new Date());
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Bugün · ${liveCount} canlı / ${totalCount} maç · ${updatedAt}`;
+        const updatedAt = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date());
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> ${updatedAt} · ${liveCount} canlı / ${totalCount} maç`;
       }
 
       renderMatchList();
