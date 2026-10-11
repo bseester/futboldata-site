@@ -3284,7 +3284,9 @@
       updateScoreTicker();
 
       // En üstteki maçın detay paneline otomatik seçilmesi
-      if (!activeMatchId || !matchesData[activeMatchId]) {
+      const selectedMatch = activeMatchId ? matchesData[activeMatchId] : null;
+      const detailIsStale = !selectedMatch || document.getElementById('detailHomeTeam')?.innerText !== selectedMatch.homeTeam;
+      if (detailIsStale) {
         const firstGiant = Object.values(matchesData).find(m => isTurkishGiant(m));
         const firstMatch = firstGiant || Object.values(matchesData)[0];
         if (firstMatch) {
