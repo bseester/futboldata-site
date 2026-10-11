@@ -2975,6 +2975,7 @@
             durum: (modernShape ? mac[18] : mac[6]) || '',
             saat: mac[11] || mac[16] || '00:00',
             lig: mac[5] || 'FUTBOL',
+            sport: Number(mac?.[36]?.[11] ?? mac?.sportId ?? 1) === 2 ? 'BASKETBOL' : 'FUTBOL',
           };
         });
       }
@@ -3038,6 +3039,7 @@
         // Mackolik maçlarını listeye ekle
         if (Array.isArray(mackMatches) && mackMatches.length > 0) {
           mackMatches.forEach(mac => {
+            if (String(mac.sport || 'FUTBOL').toLocaleUpperCase('tr-TR') !== 'FUTBOL') return;
             const homeName = mac.evSahibi || mac.homeTeam || 'Ev Sahibi';
             const awayName = mac.deplasman || mac.awayTeam || 'Deplasman';
             const statusRaw = String(mac.durum || mac.status || '').trim();
