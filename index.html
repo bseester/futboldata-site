@@ -2014,7 +2014,7 @@
             return { team: index === 0 ? match.homeTeam : match.awayTeam, formation: lineup.querySelectorAll('.Opta-TeamFormation')[index]?.textContent?.trim() || '', manager, players, subs };
           };
           const home = buildSide('Home', 0), away = buildSide('Away', 1);
-          if (home.players.length === 11 && away.players.length === 11) return { confirmed: true, source: 'Mackolik', fetchedAt: new Date().toISOString(), home, away };
+          if (home.players.length >= 10 && away.players.length >= 10) return { confirmed: true, source: 'Mackolik', fetchedAt: new Date().toISOString(), home, away };
         } catch (error) {
           console.warn(`[Mackolik] Kadro proxy denemesi başarısız (${matchDate}):`, error);
         }
@@ -3099,9 +3099,10 @@
         return rawArr.map(mac => {
           const looksLikeTeam = value => typeof value === 'string' && /\p{L}/u.test(value) && !/^\s*\d+(?:\s*[-:]\s*\d+)?\s*['’]?\s*$/u.test(value);
           const modernShape = looksLikeTeam(mac[8]) && looksLikeTeam(mac[10]);
-          const country = modernShape && typeof mac[6] === 'string' ? mac[6].trim() : '';
+          const competitionMeta = Array.isArray(mac?.[36]) ? mac[36] : [];
+          const country = (modernShape && typeof mac[6] === 'string' ? mac[6].trim() : '') || String(competitionMeta[1] || '').trim();
           const competition = String(mac[5] || 'FUTBOL').trim();
-          const league = competition;
+          const league = String(competitionMeta[3] || competitionMeta.leagueName || competitionMeta.name || competition).trim();
           return {
             id: String(mac[0]),
             evSahibi: (modernShape ? mac[8] : mac[2]) || 'Ev Sahibi',
