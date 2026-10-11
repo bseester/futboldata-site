@@ -1144,7 +1144,7 @@
         }
       } catch(e) {
         console.error('Puan durumu yüklenemedi:', e);
-        if (standingsBody) standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-red-400 font-sans text-xs">Puan durumu alınamadı. Bağlantını kontrol edip yeniden dene.</td></tr>';
+        if (standingsBody) standingsBody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-red-400 font-sans text-xs">Puan durumu alınamadı: ${String(e.message || e).replace(/[<>&]/g, '')}</td></tr>`;
       }
     }
 
@@ -2182,7 +2182,7 @@
         const container = document.getElementById('transDealsGrid');
         const dealsEl = document.getElementById('transferStatDeals');
         const sourceEl = document.getElementById('transfersSourceBadge');
-        if (container) container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-400 text-xs">Güncel Transfermarkt verisi şu anda alınamıyor. Bağlantı geldiğinde tekrar deneyin.</div>';
+        if (container) container.innerHTML = `<div class="col-span-2 text-center py-8 text-zinc-400 text-xs">Transfermarkt verisi alınamadı: ${String(e.message || e).replace(/[<>&]/g, '')}</div>`;
         if (dealsEl) dealsEl.innerText = 'Veri alınamadı';
         if (sourceEl) sourceEl.innerText = 'TRANSFERMARKT BAĞLANTISI KURULAMADI';
       }
