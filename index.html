@@ -2011,8 +2011,8 @@
         container.innerHTML = `
           <div class="flex flex-col items-center justify-center h-full text-center p-6 space-y-3 z-30 relative">
             <span class="text-3xl ${state === 'loading' ? 'animate-pulse' : ''}">${state === 'loading' ? '🔎' : '📋'}</span>
-            <div class="text-white font-black text-sm">${state === 'loading' ? 'Güncel kadro aranıyor' : 'Kadro kaynağında veri yok'}</div>
-            <p class="text-zinc-400 text-xs max-w-xs">${state === 'loading' ? 'Maç, takım adları ve tarih üzerinden kadro sağlayıcılarında aranıyor.' : 'Bu maç için sağlayıcılardan doğrulanmış ilk 11 alınamadı. Veri geldiğinde otomatik görünür.'}</p>
+            <div class="text-white font-black text-sm">${state === 'loading' ? 'Mackolik kadrosu aranıyor' : 'Mackolik kadrosu henüz yok'}</div>
+            <p class="text-zinc-400 text-xs max-w-xs">${state === 'loading' ? 'Maçın açıklanmış ilk 11’i ve yedekleri Mackolik’ten getiriliyor.' : 'Mackolik bu maçın kadrosunu henüz yayımlamadı. Yayımlandığında otomatik yüklenecek.'}</p>
           </div>
         `;
         document.getElementById('homeSubsList').innerHTML = '<div class="text-zinc-500 text-[11px] py-1 text-center">Yedek kulübesi açıklanmadı</div>';
