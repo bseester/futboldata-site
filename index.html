@@ -1095,6 +1095,22 @@
     // =====================================================
     // 📂 PUAN DURUMU YÜKLEME (ÇOKLU LİG DESTEĞİ)
     // =====================================================
+    async function loadStandingsFallback(league) {
+      if (league !== 'superlig') return false;
+      try {
+        const response = await fetch('./data/standings-superlig.json', { cache: 'no-cache' });
+        const backup = await response.json();
+        if (!response.ok || !backup.success || !Array.isArray(backup.data) || !backup.data.length) return false;
+        const badge = document.getElementById('standingsSourceBadge');
+        if (badge) badge.innerText = 'MACKOLİK • YEDEK VERİ';
+        renderStandingsTable(backup.data);
+        return true;
+      } catch (error) {
+        console.error('Puan tablosu yedeği alınamadı:', error);
+        return false;
+      }
+    }
+
     async function loadFixtures(league = 'superlig') {
       currentFixturesLeague = league;
 
@@ -1139,12 +1155,14 @@
         const fJson = await fRes.json();
         if (fJson.success && fJson.standings && fJson.standings.length > 0) {
           renderStandingsTable(fJson.standings);
-        } else if (standingsBody) {
+        } else if (!await loadStandingsFallback(league) && standingsBody) {
           standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-amber-400 font-sans text-xs">Puan durumu şu an alınamıyor. Yenilemek için 🔄 düğmesine dokun.</td></tr>';
         }
       } catch(e) {
         console.error('Puan durumu yüklenemedi:', e);
-        if (standingsBody) standingsBody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-red-400 font-sans text-xs">Puan durumu alınamadı: ${String(e.message || e).replace(/[<>&]/g, '')}</td></tr>`;
+        if (!await loadStandingsFallback(league) && standingsBody) {
+          standingsBody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-red-400 font-sans text-xs">Puan durumu alınamadı: ${String(e.message || e).replace(/[<>&]/g, '')}</td></tr>`;
+        }
       }
     }
 
@@ -2187,6 +2205,33 @@
         }
       } catch(e) {
         console.error('Transfer verisi alınamadı:', e);
+        try {
+          const backupResponse = await fetch('./data/transfers.json', { cache: 'no-cache' });
+          const backup = await backupResponse.json();
+          if (backupResponse.ok && backup.success && backup.data) {
+            transfersData = backup.data;
+            const spendEl = document.getElementById('transferStatSpend');
+            const dealsEl = document.getElementById('transferStatDeals');
+            const rumorsEl = document.getElementById('transferStatRumors');
+            const seasonEl = document.getElementById('transferStatSeason');
+            const sourceEl = document.getElementById('transfersSourceBadge');
+            const topPlayerEl = document.getElementById('transferStatTop');
+            const topFeeEl = document.getElementById('transferStatTopFee');
+            if (spendEl) spendEl.innerText = transfersData.stats?.totalSpendEur || '—';
+            if (dealsEl) dealsEl.innerText = `${transfersData.stats?.confirmedDealsCount || 0} Transfer`;
+            if (rumorsEl) rumorsEl.innerText = `${transfersData.stats?.activeRumorsCount || 0} Dedikodu`;
+            if (seasonEl) seasonEl.innerText = `Transfermarkt ${transfersData.season || '26/27'}`;
+            if (sourceEl) sourceEl.innerText = 'TRANSFERMARKT • YEDEK VERİ';
+            if (topPlayerEl) topPlayerEl.innerText = transfersData.stats?.topPlayer || '—';
+            if (topFeeEl) topFeeEl.innerText = transfersData.stats?.topFeeValue || '—';
+            renderTransferDeals(transfersData.confirmedDeals || []);
+            renderTransferRumors(transfersData.rumors || []);
+            renderTopValuedPlayers(transfersData.topValuedPlayers || []);
+            return;
+          }
+        } catch (backupError) {
+          console.error('Transfer yedeği alınamadı:', backupError);
+        }
         const container = document.getElementById('transDealsGrid');
         const dealsEl = document.getElementById('transferStatDeals');
         const sourceEl = document.getElementById('transfersSourceBadge');
