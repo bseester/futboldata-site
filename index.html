@@ -555,7 +555,7 @@
       <div id="trans-content-deals" class="space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <h3 class="text-sm font-black text-white uppercase tracking-wider">✍️ Son Resmileşen Transferler</h3>
+            <h3 id="transfersDealsTitle" class="text-sm font-black text-white uppercase tracking-wider">⚽ Güncel Süper Lig Transferleri</h3>
             <span id="transfersSourceBadge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">Güncel transferler</span>
           </div>
           <span id="transDealsCountBadge" class="text-xs text-zinc-500 font-mono">10 Transfer</span>
@@ -2142,10 +2142,12 @@
           }
           const seasonEl = document.getElementById('transferStatSeason');
           const sourceEl = document.getElementById('transfersSourceBadge');
+          const titleEl = document.getElementById('transfersDealsTitle');
           const topPlayerEl = document.getElementById('transferStatTop');
           const topFeeEl = document.getElementById('transferStatTopFee');
           if (seasonEl) seasonEl.innerText = `Süper Lig ${transfersData.season || ''}`;
           if (sourceEl) sourceEl.innerText = `${transfersData.source || 'Transfer'} • ${transfersData.season || ''}`;
+          if (titleEl) titleEl.innerText = `⚽ ${transfersData.season || ''} Süper Lig Transferleri`;
           if (topPlayerEl) topPlayerEl.innerText = transfersData.stats?.topPlayer || '—';
           if (topFeeEl) topFeeEl.innerText = transfersData.stats?.topFeeValue || '—';
           renderTransferDeals(transfersData.confirmedDeals || []);
