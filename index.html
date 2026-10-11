@@ -1980,7 +1980,10 @@
             }
           } else if (activeMatchId === matchId) {
             renderTacticalPitch(null, 'unavailable');
-            if (lineupsTab) lineupsTab.innerHTML = 'KADRO BULUNAMADI';
+            if (lineupsTab) lineupsTab.innerHTML = 'MACKOLİK KADROSU BEKLENİYOR';
+            window.setTimeout(() => {
+              if (activeMatchId === matchId && !matchesData[matchId]?.lineups) selectActiveMatch(matchId);
+            }, 90_000);
           }
         });
       }
@@ -3031,7 +3034,8 @@
             const awayScore = parseInt(mac.skorDep ?? mac.awayScore ?? '0', 10) || 0;
             const minute = parsedStatus.minute;
             const leagueName = mac.lig || mac.league || 'MACKOLİK: FUTBOL';
-            const lineups = buildMatchLineups(homeName, awayName);
+            // Canlı maçlarda örnek kadro kullanma; Mackolik'in açıkladığı gerçek 11'i bekle.
+            const lineups = null;
 
             collectedMatches.push({
               id: `mackolik-${mac.id}`,
@@ -3045,8 +3049,8 @@
               isLive: isLive,
               stadium: `${homeName} Stadyumu`,
               referee: 'Hakem',
-              homeManager: (lineups && lineups.home) ? lineups.home.manager : 'Teknik Direktör',
-              awayManager: (lineups && lineups.away) ? lineups.away.manager : 'Teknik Direktör',
+              homeManager: 'Mackolik kadrosu bekleniyor',
+              awayManager: 'Mackolik kadrosu bekleniyor',
               homeMarketValueTotal: (lineups && lineups.home) ? '€120M' : '€25M',
               awayMarketValueTotal: (lineups && lineups.away) ? '€110M' : '€20M',
               isSakipSpecial: isTurkishGiant({ homeTeam: homeName, awayTeam: awayName }),
