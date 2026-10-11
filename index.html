@@ -1839,8 +1839,16 @@
         if (currentFilter === 'CANLI' && !isMatchLive(m)) return;
         if (currentFilter === 'BITEN' && m.status !== 'MS') return;
         if (currentFilter === 'FAVORİ' && !favoriteMatchIds.has(m.id)) return;
-        const leagueName = m.league || 'Diğer Maçlar';
-        const countryCode = m.country || '';
+        const leagueValue = m.league;
+        const leagueName = typeof leagueValue === 'string'
+          ? (leagueValue.trim() || 'Diğer Maçlar')
+          : (leagueValue && typeof leagueValue === 'object'
+              ? String(leagueValue.name || leagueValue.title || leagueValue.leagueName || leagueValue.competitionName || leagueValue.displayName || leagueValue.shortName || 'Diğer Maçlar').trim()
+              : 'Diğer Maçlar');
+        const countryValue = m.country;
+        const countryCode = typeof countryValue === 'string'
+          ? countryValue
+          : (countryValue && typeof countryValue === 'object' ? String(countryValue.name || countryValue.code || countryValue.country || '') : '');
         const groupKey = `${countryCode}::${leagueName}`;
         if (!leagues.has(groupKey)) leagues.set(groupKey, { leagueName, countryCode, matches: [] });
         leagues.get(groupKey).matches.push(m);
