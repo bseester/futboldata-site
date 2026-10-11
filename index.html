@@ -483,8 +483,8 @@
           </div>
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Toplam Harcama</span>
-            <div id="transferStatSpend" class="text-base sm:text-lg font-black text-white font-mono">€186.4M</div>
-            <span id="transferStatSeason" class="text-[9px] text-emerald-400 font-medium">Süper Lig güncel sezon</span>
+            <div id="transferStatSpend" class="text-base sm:text-lg font-black text-white font-mono">—</div>
+            <span id="transferStatSeason" class="text-[9px] text-emerald-400 font-medium">Transfermarkt 26/27</span>
           </div>
         </div>
 
@@ -494,8 +494,8 @@
           </div>
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Resmi İmzalar</span>
-            <div id="transferStatDeals" class="text-base sm:text-lg font-black text-white font-mono">148 Transfer</div>
-            <span class="text-[9px] text-blue-400 font-medium">Kayıtlı & Onaylı</span>
+            <div id="transferStatDeals" class="text-base sm:text-lg font-black text-white font-mono">Yükleniyor</div>
+            <span class="text-[9px] text-blue-400 font-medium">Transfermarkt kayıtları</span>
           </div>
         </div>
 
@@ -505,8 +505,8 @@
           </div>
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Sıcak Dedikodular</span>
-            <div id="transferStatRumors" class="text-base sm:text-lg font-black text-white font-mono">42 Masada</div>
-            <span class="text-[9px] text-red-400 font-medium">Güncel dedikodu akışı yok</span>
+            <div id="transferStatRumors" class="text-base sm:text-lg font-black text-white font-mono">—</div>
+            <span class="text-[9px] text-red-400 font-medium">Resmi transfer listesi</span>
           </div>
         </div>
 
@@ -556,7 +556,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <h3 id="transfersDealsTitle" class="text-sm font-black text-white uppercase tracking-wider">⚽ Güncel Süper Lig Transferleri</h3>
-            <span id="transfersSourceBadge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">Güncel transferler</span>
+            <span id="transfersSourceBadge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">TRANSFERMARKT 26/27</span>
           </div>
           <span id="transDealsCountBadge" class="text-xs text-zinc-500 font-mono">10 Transfer</span>
         </div>
@@ -2151,16 +2151,17 @@
             const rumEl   = document.getElementById('transferStatRumors');
             if (spendEl) spendEl.innerText = transfersData.stats.totalSpendEur;
             if (dealsEl) dealsEl.innerText = `${transfersData.stats.confirmedDealsCount} Transfer`;
-            if (rumEl)   rumEl.innerText   = 'Akış yok';
+            if (rumEl)   rumEl.innerText   = `${transfersData.stats.activeRumorsCount || 0} Dedikodu`;
           }
           const seasonEl = document.getElementById('transferStatSeason');
           const sourceEl = document.getElementById('transfersSourceBadge');
           const titleEl = document.getElementById('transfersDealsTitle');
           const topPlayerEl = document.getElementById('transferStatTop');
           const topFeeEl = document.getElementById('transferStatTopFee');
-          if (seasonEl) seasonEl.innerText = `Süper Lig ${transfersData.season || ''}`;
-          if (sourceEl) sourceEl.innerText = `${transfersData.source || 'Transfer'} • ${transfersData.season || ''}`;
-          if (titleEl) titleEl.innerText = `⚽ ${transfersData.season || ''} Süper Lig Transferleri`;
+          const season = transfersData.season || '26/27';
+          if (seasonEl) seasonEl.innerText = `Transfermarkt ${season}`;
+          if (sourceEl) sourceEl.innerText = `TRANSFERMARKT • ${new Date(json.updatedAt || json.timestamp).toLocaleString('tr-TR')}`;
+          if (titleEl) titleEl.innerText = `⚽ ${season} Süper Lig Transferleri`;
           if (topPlayerEl) topPlayerEl.innerText = transfersData.stats?.topPlayer || '—';
           if (topFeeEl) topFeeEl.innerText = transfersData.stats?.topFeeValue || '—';
           renderTransferDeals(transfersData.confirmedDeals || []);
@@ -2170,7 +2171,11 @@
       } catch(e) {
         console.error('Transfer verisi alınamadı:', e);
         const container = document.getElementById('transDealsGrid');
-        if (container) container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-400 text-xs">Güncel transfer verisi şu anda alınamıyor. Biraz sonra yeniden deneyin.</div>';
+        const dealsEl = document.getElementById('transferStatDeals');
+        const sourceEl = document.getElementById('transfersSourceBadge');
+        if (container) container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-400 text-xs">Güncel Transfermarkt verisi şu anda alınamıyor. Bağlantı geldiğinde tekrar deneyin.</div>';
+        if (dealsEl) dealsEl.innerText = 'Veri alınamadı';
+        if (sourceEl) sourceEl.innerText = 'TRANSFERMARKT BAĞLANTISI KURULAMADI';
       }
     }
 
