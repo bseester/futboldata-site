@@ -484,7 +484,7 @@
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Toplam Harcama</span>
             <div id="transferStatSpend" class="text-base sm:text-lg font-black text-white font-mono">€186.4M</div>
-            <span class="text-[9px] text-emerald-400 font-medium">Süper Lig 24/25</span>
+            <span id="transferStatSeason" class="text-[9px] text-emerald-400 font-medium">Süper Lig güncel sezon</span>
           </div>
         </div>
 
@@ -506,7 +506,7 @@
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Sıcak Dedikodular</span>
             <div id="transferStatRumors" class="text-base sm:text-lg font-black text-white font-mono">42 Masada</div>
-            <span class="text-[9px] text-red-400 font-medium">Doğrulanmış Kaynak</span>
+            <span class="text-[9px] text-red-400 font-medium">Güncel dedikodu akışı yok</span>
           </div>
         </div>
 
@@ -516,8 +516,8 @@
           </div>
           <div>
             <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold block">Rekor Bonservis</span>
-            <div class="text-xs sm:text-sm font-black text-white truncate max-w-[140px]" title="Youssef En-Nesyri (€19.5M)">Youssef En-Nesyri</div>
-            <span class="text-[10px] font-mono font-bold text-yellow-400">€19.50M</span>
+            <div id="transferStatTop" class="text-xs sm:text-sm font-black text-white truncate max-w-[140px]">—</div>
+            <span id="transferStatTopFee" class="text-[10px] font-mono font-bold text-yellow-400">—</span>
           </div>
         </div>
       </div>
@@ -556,7 +556,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <h3 class="text-sm font-black text-white uppercase tracking-wider">✍️ Son Resmileşen Transferler</h3>
-            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">KAP & RESMİ BİLDİRİM</span>
+            <span id="transfersSourceBadge" class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">Güncel transferler</span>
           </div>
           <span id="transDealsCountBadge" class="text-xs text-zinc-500 font-mono">10 Transfer</span>
         </div>
@@ -2128,6 +2128,7 @@
       try {
         const res = await fetch('/api/transfers');
         const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
         if (json.success && json.data) {
           transfersData = json.data;
           // Metrikleri doldur
@@ -2137,14 +2138,24 @@
             const rumEl   = document.getElementById('transferStatRumors');
             if (spendEl) spendEl.innerText = transfersData.stats.totalSpendEur;
             if (dealsEl) dealsEl.innerText = `${transfersData.stats.confirmedDealsCount} Transfer`;
-            if (rumEl)   rumEl.innerText   = `${transfersData.stats.activeRumorsCount} Masada`;
+            if (rumEl)   rumEl.innerText   = 'Akış yok';
           }
+          const seasonEl = document.getElementById('transferStatSeason');
+          const sourceEl = document.getElementById('transfersSourceBadge');
+          const topPlayerEl = document.getElementById('transferStatTop');
+          const topFeeEl = document.getElementById('transferStatTopFee');
+          if (seasonEl) seasonEl.innerText = `Süper Lig ${transfersData.season || ''}`;
+          if (sourceEl) sourceEl.innerText = `${transfersData.source || 'Transfer'} • ${transfersData.season || ''}`;
+          if (topPlayerEl) topPlayerEl.innerText = transfersData.stats?.topPlayer || '—';
+          if (topFeeEl) topFeeEl.innerText = transfersData.stats?.topFeeValue || '—';
           renderTransferDeals(transfersData.confirmedDeals || []);
           renderTransferRumors(transfersData.rumors || []);
           renderTopValuedPlayers(transfersData.topValuedPlayers || []);
         }
       } catch(e) {
         console.error('Transfer verisi alınamadı:', e);
+        const container = document.getElementById('transDealsGrid');
+        if (container) container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-400 text-xs">Güncel transfer verisi şu anda alınamıyor. Biraz sonra yeniden deneyin.</div>';
       }
     }
 
@@ -2170,7 +2181,7 @@
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
                 <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 flex-shrink-0">
-                  <img src="${d.photo}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'" />
+                  <img src="${d.photo || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'" />
                 </div>
                 <div>
                   <h4 class="font-black text-white text-sm group-hover:text-yellow-400 transition cursor-pointer" onclick="switchTransferSubTab('player'); loadPlayerProfile('${d.player.toLowerCase().replace(/\\s+/g, '-')}')">
@@ -2220,7 +2231,7 @@
       if (!container) return;
 
       if (!rumors || rumors.length === 0) {
-        container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-500 text-xs">Aradığınız kritere uygun dedikodu bulunamadı.</div>';
+        container.innerHTML = '<div class="col-span-2 text-center py-8 text-zinc-500 text-xs">Güncel ve doğrulanabilir bir dedikodu akışı bağlı değil.</div>';
         return;
       }
 
