@@ -1763,8 +1763,8 @@
       if (/^(?:MS|FT|FULL\s?TIME|FINISHED|ENDED|BİTTİ|BITTI|AET|PEN(?:ALTIES)?|CANCELLED|POSTPONED|ABANDONED)(?:\b|\s|$)/u.test(normalized)) {
         return { status: 'MS', isLive: false, minute: 90 };
       }
-      if (/^(?:IY|İY|HT|CANLI|LIVE|IN\s+PLAY)$/u.test(normalized)) {
-        return { status: 'CANLI', isLive: true, minute: 45 };
+      if (/^(?:IY|İY|HT|1H|2H|1\.Y|2\.Y|CANLI|LIVE|IN\s+PLAY|FIRST\s+HALF|SECOND\s+HALF)$/u.test(normalized)) {
+        return { status: 'CANLI', isLive: true, minute: /^(?:2H|2\.Y|SECOND)/u.test(normalized) ? 60 : 45 };
       }
       const minuteMatch = normalized.match(/^(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’]?$/u);
       if (minuteMatch) {
@@ -2963,16 +2963,25 @@
       const directUrl = `https://vd.mackolik.com/livedata?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`;
 
       function parseMackolikRaw(rawArr) {
-        return rawArr.map(mac => ({
-          id: String(mac[0]),
-          evSahibi: mac[8] || mac[2] || 'Ev Sahibi',
-          deplasman: mac[10] || mac[4] || 'Deplasman',
-          skorEv: mac[14] ?? mac[12] ?? 0,
-          skorDep: mac[15] ?? mac[13] ?? 0,
-          durum: mac[18] || mac[6] || '',
-          saat: mac[11] || mac[16] || '00:00',
-          lig: mac[5] || 'FUTBOL',
-        }));
+        return rawArr.map(mac => {
+          const looksLikeTeam = value => typeof value === 'string' && /\p{L}/u.test(value) && !/^\s*\d+(?:\s*[-:]\s*\d+)?\s*['’]?\s*$/u.test(value);
+          const modernShape = looksLikeTeam(mac[8]) && looksLikeTeam(mac[10]);
+          return {
+            id: String(mac[0]),
+            evSahibi: (modernShape ? mac[8] : mac[2]) || 'Ev Sahibi',
+            deplasman: (modernShape ? mac[10] : mac[4]) || 'Deplasman',
+            skorEv: (modernShape ? mac[14] : mac[12]) ?? 0,
+            skorDep: (modernShape ? mac[15] : mac[13]) ?? 0,
+            durum: (modernShape ? mac[18] : mac[6]) || '',
+            saat: mac[11] || mac[16] || '00:00',
+            lig: mac[5] || 'FUTBOL',
+          };
+        });
+      }
+
+      function getMackolikRows(data) {
+        const rows = [...(Array.isArray(data?.e) ? data.e : []), ...(Array.isArray(data?.m) ? data.m : [])];
+        return [...new Map(rows.map(row => [String(Array.isArray(row) ? row[0] : row?.id || JSON.stringify(row)), row])).values()];
       }
 
       try {
@@ -2996,7 +3005,7 @@
             });
             if (resp.ok) {
               const data = await resp.json();
-              const rawArr = data.e || data.m;
+              const rawArr = getMackolikRows(data);
               if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
             }
           } catch(e) {}
@@ -3008,7 +3017,7 @@
             const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(directUrl)}`, { signal: AbortSignal.timeout(6000) });
             if (resp.ok) {
               const data = await resp.json();
-              const rawArr = data.e || data.m;
+              const rawArr = getMackolikRows(data);
               if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
             }
           } catch(e) {}
@@ -3020,7 +3029,7 @@
             const resp = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`, { signal: AbortSignal.timeout(6000) });
             if (resp.ok) {
               const data = await resp.json();
-              const rawArr = data.e || data.m;
+              const rawArr = getMackolikRows(data);
               if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
             }
           } catch(e) {}
