@@ -1786,14 +1786,14 @@
       return text.includes('fenerbah') || text.includes('galatasaray') || text.includes('beşiktaş') || text.includes('besiktas') || text.includes('antalyaspor') || text.includes('trabzon') || !!m.isSakipSpecial;
     }
 
-    function isTurkishLeagueName(name) {
-      const normalized = String(name || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR');
-      return /turkiye|turkey|trendyol|super lig|tff|ziraat/.test(normalized);
+    function isTurkishLeagueName(name, country = '') {
+      const normalized = `${country} ${name}`.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR');
+      return /turkiye|turkey|trendyol|tff|ziraat|\btsl\b/.test(normalized);
     }
 
-    function leagueSortPriority(name) {
+    function leagueSortPriority(name, country = '') {
       const normalized = String(name || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR');
-      if (!isTurkishLeagueName(name)) return 2;
+      if (!isTurkishLeagueName(name, country)) return 2;
       if (normalized.includes('super lig')) return 0;
       return 1;
     }
@@ -1824,19 +1824,26 @@
         if (favMatches.length > 0) appendLeagueBlock(container, '⭐ DİĞER FAVORİLERİM', favMatches, true, false);
       }
 
-      const leagues = {};
+      const leagues = new Map();
       Object.values(matchesData).forEach(m => {
         if (currentFilter === 'CANLI' && !isMatchLive(m)) return;
         if (currentFilter === 'BITEN' && m.status !== 'MS') return;
         if (currentFilter === 'FAVORİ' && !favoriteMatchIds.has(m.id)) return;
-        if (!leagues[m.league]) leagues[m.league] = [];
-        leagues[m.league].push(m);
+        const leagueName = m.league || 'Diğer Maçlar';
+        const countryCode = m.country || '';
+        const groupKey = `${countryCode}::${leagueName}`;
+        if (!leagues.has(groupKey)) leagues.set(groupKey, { leagueName, countryCode, matches: [] });
+        leagues.get(groupKey).matches.push(m);
       });
 
-      Object.entries(leagues)
-        .sort(([a], [b]) => leagueSortPriority(a) - leagueSortPriority(b) || a.localeCompare(b, 'tr'))
-        .forEach(([leagueName, matches]) => {
-          appendLeagueBlock(container, leagueName, matches, false, isTurkishLeagueName(leagueName));
+      const groups = [...leagues.values()];
+      const titleCounts = new Map();
+      groups.forEach(group => titleCounts.set(group.leagueName, (titleCounts.get(group.leagueName) || 0) + 1));
+      groups
+        .sort((a, b) => leagueSortPriority(a.leagueName, a.countryCode) - leagueSortPriority(b.leagueName, b.countryCode) || a.leagueName.localeCompare(b.leagueName, 'tr'))
+        .forEach(({ leagueName, countryCode, matches }) => {
+        const title = titleCounts.get(leagueName) > 1 && countryCode ? `${countryCode} · ${leagueName}` : leagueName;
+        appendLeagueBlock(container, title, matches, false, isTurkishLeagueName(leagueName, countryCode));
         });
     }
 
@@ -2996,6 +3003,9 @@
         return rawArr.map(mac => {
           const looksLikeTeam = value => typeof value === 'string' && /\p{L}/u.test(value) && !/^\s*\d+(?:\s*[-:]\s*\d+)?\s*['’]?\s*$/u.test(value);
           const modernShape = looksLikeTeam(mac[8]) && looksLikeTeam(mac[10]);
+          const country = modernShape && typeof mac[6] === 'string' ? mac[6].trim() : '';
+          const competition = String(mac[5] || 'FUTBOL').trim();
+          const league = competition;
           return {
             id: String(mac[0]),
             evSahibi: (modernShape ? mac[8] : mac[2]) || 'Ev Sahibi',
@@ -3004,7 +3014,9 @@
             skorDep: (modernShape ? mac[15] : mac[13]) ?? 0,
             durum: (modernShape ? mac[18] : mac[6]) || '',
             saat: mac[11] || mac[16] || '00:00',
-            lig: mac[5] || 'FUTBOL',
+            country,
+            lig: league,
+            league,
             sport: Number(mac?.[36]?.[11] ?? mac?.sportId ?? 1) === 2 ? 'BASKETBOL' : 'FUTBOL',
           };
         });
