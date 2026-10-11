@@ -2173,6 +2173,9 @@
         .finally(() => mackolikStatsRequests.delete(matchId));
       mackolikStatsRequests.set(matchId, request);
     }
+    window.setInterval(() => {
+      if (activeMatchId) loadMackolikMatchStats(activeMatchId);
+    }, 30_000);
 
     // =============================================================
     // 🌟 CANLI TRANSFER BORSASI HUB MODÜLÜ
