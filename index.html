@@ -2159,7 +2159,8 @@
         return;
       }
       if (mackolikStatsRequests.has(matchId)) return;
-      const request = apiFetch(`/api/mackolik/match-stats/${encodeURIComponent(matchId)}`, { cache: 'no-store' })
+      const endpoint = `/api/mackolik/match-stats/${encodeURIComponent(matchId)}`;
+      const request = (typeof apiFetch === 'function' ? apiFetch(endpoint, { cache: 'no-store' }) : fetch(endpoint, { cache: 'no-store' }))
         .then(response => response.ok ? response.json() : null)
         .then(data => {
           const stats = data?.success && Array.isArray(data.items) && data.items.length ? { source: 'Mackolik', items: data.items } : null;
