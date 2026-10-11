@@ -74,6 +74,14 @@
       main { padding: 12px 10px 24px !important; }
       #tab-matches, #tab-news, #tab-transfers, #tab-fixtures { gap: 12px; }
       #matchListContainer > div { border-radius: 16px; }
+      #matchDetailPanel { display: none; }
+      #matchDetailPanel.mobile-match-detail-open {
+        display: block !important; position: fixed; inset: 0; z-index: 80; width: 100vw; height: 100dvh;
+        overflow-y: auto; overscroll-behavior: contain; background: #090d12;
+        padding: calc(8px + env(safe-area-inset-top)) 10px calc(14px + env(safe-area-inset-bottom));
+      }
+      #matchDetailPanel.mobile-match-detail-open > div { min-height: 100%; border-radius: 18px; }
+      #matchDetailClose { position: sticky; top: 0; z-index: 5; }
       #mobileBottomNav {
         position: fixed; inset: auto 0 0; z-index: 70;
         display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -259,8 +267,9 @@
         </div>
 
         <!-- SAĞ: MAÇ DETAY MERKEZİ (FOTOĞRAFLI 2D KADROLAR) -->
-        <div class="lg:col-span-7 space-y-3">
+        <div id="matchDetailPanel" class="lg:col-span-7 space-y-3">
           <div class="bg-mackolik-card border border-mackolik rounded-xl p-4 shadow-2xl space-y-4">
+            <button id="matchDetailClose" type="button" onclick="closeMatchDetail()" class="sm:hidden w-full rounded-xl border border-mackolik bg-zinc-900/95 px-3 py-2 text-sm font-black text-zinc-200 shadow-lg">← Maç listesine dön</button>
             
             <!-- Maç Skor Hero -->
             <div class="border-b border-mackolik pb-3">
@@ -351,11 +360,11 @@
               <!-- Yedekler -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
                 <div class="bg-mackolik-league p-3 rounded-xl border border-mackolik">
-                  <div class="font-black text-yellow-400 mb-1">GALATASARAY YEDEKLER</div>
+                  <div id="homeSubsTitle" class="font-black text-yellow-400 mb-1">EV SAHİBİ YEDEKLER</div>
                   <div id="homeSubsList" class="space-y-1 text-zinc-300 text-[11px]"></div>
                 </div>
                 <div class="bg-mackolik-league p-3 rounded-xl border border-mackolik">
-                  <div class="font-black text-blue-400 mb-1">FENERBAHÇE YEDEKLER</div>
+                  <div id="awaySubsTitle" class="font-black text-blue-400 mb-1">DEPLASMAN YEDEKLER</div>
                   <div id="awaySubsList" class="space-y-1 text-zinc-300 text-[11px]"></div>
                 </div>
               </div>
@@ -1031,6 +1040,7 @@
     let allFixturesData = [];
 
     function switchMainTab(t) {
+      closeMatchDetail();
       ['matches', 'news', 'transfers', 'fixtures'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
         if (el) el.classList.add('hidden');
@@ -1837,6 +1847,10 @@
       });
 
       const groups = [...leagues.values()];
+      if (groups.length === 0 && container.childElementCount === 0) {
+        container.innerHTML = '<div class="rounded-2xl border border-mackolik bg-mackolik-card p-6 text-center text-sm font-bold text-zinc-400">Bu kategoride gösterilecek maç yok.</div>';
+        return;
+      }
       const titleCounts = new Map();
       groups.forEach(group => titleCounts.set(group.leagueName, (titleCounts.get(group.leagueName) || 0) + 1));
       groups
@@ -1872,7 +1886,7 @@
 
         const row = document.createElement('div');
         row.id = `match-row-${m.id}`;
-        row.onclick = () => selectActiveMatch(m.id);
+        row.onclick = () => selectActiveMatch(m.id, true);
         row.className = `bg-mackolik-row p-2.5 flex items-center justify-between cursor-pointer transition ${
           isSelected ? 'bg-zinc-800 border-l-4 border-yellow-400' : ''
         }`;
@@ -1925,8 +1939,7 @@
         }).format(new Date());
         const dateParam = encodeURIComponent(matchDate);
         const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}&date=${dateParam}`, { cache: 'no-store' });
-        if (!resp.ok) return null;
-        const data = await resp.json();
+        const data = resp.ok ? await resp.json() : null;
         // Only accept lineups explicitly marked as verified by a provider.
         // The previous backend returned a hard-coded squad as if it were official.
         if (data && data.confirmed === true && data.lineups) {
@@ -1935,19 +1948,88 @@
       } catch (e) {
         console.warn('[Mackolik] Kadro getirme hatası:', e);
       }
+      return fetchMackolikLineupsFromMackolik(match, matchId);
+    }
+
+    async function fetchMackolikLineupsFromMackolik(match, matchId) {
+      const normalizeTeam = value => String(value || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/\b(fc|afc|fk|sk|sc|club)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+      const teamsMatch = (left, right) => {
+        const a = normalizeTeam(left), b = normalizeTeam(right);
+        if (!a || !b) return false;
+        if (a === b || a.includes(b) || b.includes(a)) return true;
+        const aw = a.split(' ').filter(word => word.length > 2), bw = b.split(' ').filter(word => word.length > 2);
+        return aw.filter(word => bw.includes(word)).length >= Math.min(aw.length, bw.length) * 0.75;
+      };
+      const proxy = url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const date = match?.date || new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+      const dates = [date];
+      for (const offset of [-1, 1]) {
+        const shifted = new Date(`${date}T12:00:00Z`);
+        shifted.setUTCDate(shifted.getUTCDate() + offset);
+        dates.push(shifted.toISOString().slice(0, 10));
+      }
+
+      for (const matchDate of dates) {
+        try {
+          const scoreUrl = `https://www.mackolik.com/perform/p0/ajax/components/competition/livescores/json?sports%5B%5D=Soccer&matchDate=${encodeURIComponent(matchDate)}`;
+          const scoreResponse = await fetch(proxy(scoreUrl), { cache: 'no-store', signal: AbortSignal.timeout(9000) });
+          if (!scoreResponse.ok) continue;
+          const scoreData = await scoreResponse.json();
+          const event = Object.values(scoreData?.data?.matches || {}).find(item =>
+            teamsMatch(item.homeTeam?.name, match?.homeTeam) && teamsMatch(item.awayTeam?.name, match?.awayTeam));
+          if (!event?.id || !event.matchSlug) continue;
+
+          const detailUrl = `https://www.mackolik.com/mac/${event.matchSlug}/${event.id}`;
+          const detailResponse = await fetch(proxy(detailUrl), { cache: 'no-store', signal: AbortSignal.timeout(12000) });
+          if (!detailResponse.ok) continue;
+          const documentHtml = new DOMParser().parseFromString(await detailResponse.text(), 'text/html');
+          const lineup = documentHtml.querySelector('[data-attribute="staring-eleven"], [data-attribute="starting-eleven"]');
+          if (!lineup) continue;
+          const nodes = [...lineup.querySelectorAll('g.Opta-Node.Opta-Starter')];
+          const buildSide = (side, index) => {
+            const players = nodes.filter(node => node.classList.contains(`Opta-${side}`)).map(node => {
+              const name = node.querySelector('.Opta-PlayerName')?.textContent?.trim();
+              if (!name) return null;
+              const number = node.querySelector('.Opta-JerseyNumber')?.textContent?.trim() || '';
+              const circle = node.querySelector('circle');
+              const cx = Number(circle?.getAttribute('cx')) || (side === 'Home' ? 200 : 630);
+              const cy = Number(circle?.getAttribute('cy')) || 278;
+              return { name, number: Number(number) || '', pos: '', x: Math.max(5, Math.min(95, cy / 5.56)), y: side === 'Home' ? Math.max(5, Math.min(47, 6 + (cx / 416) * 39)) : Math.max(53, Math.min(95, 94 - ((cx - 416) / 416) * 39)) };
+            }).filter(Boolean);
+            const rows = [...documentHtml.querySelectorAll(`.widget-match-stats__team-container--${side.toLowerCase()} .widget-match-stats__row`)];
+            const subs = rows.map(row => ({
+              name: row.querySelector('.widget-match-stats__person-name')?.textContent?.trim(),
+              number: Number(row.querySelector('.widget-match-stats__cell--shirt-number')?.textContent?.trim()) || '',
+              pos: row.querySelector('.widget-match-stats__cell--person-position abbr')?.textContent?.trim() || ''
+            })).filter(player => player.name);
+            const manager = documentHtml.querySelector(`.widget-match-stats__team-container--${side.toLowerCase()} [data-attribute="manager"] .widget-match-stats__person-name`)?.textContent?.trim() || '';
+            return { team: index === 0 ? match.homeTeam : match.awayTeam, formation: lineup.querySelectorAll('.Opta-TeamFormation')[index]?.textContent?.trim() || '', manager, players, subs };
+          };
+          const home = buildSide('Home', 0), away = buildSide('Away', 1);
+          if (home.players.length === 11 && away.players.length === 11) return { confirmed: true, source: 'Mackolik', fetchedAt: new Date().toISOString(), home, away };
+        } catch (error) {
+          console.warn(`[Mackolik] Kadro proxy denemesi başarısız (${matchDate}):`, error);
+        }
+      }
       return null;
     }
 
-    function selectActiveMatch(matchId) {
+    function selectActiveMatch(matchId, openOnMobile = false) {
       activeMatchId = matchId;
       _lastMatchStandingsId = null; // Standings cache'ini sıfırla — yeni maçta tekrar yüklensin
       const m = matchesData[matchId];
       if (!m) return;
+      if (openOnMobile && window.matchMedia('(max-width: 767px)').matches) {
+        document.getElementById('matchDetailPanel')?.classList.add('mobile-match-detail-open');
+        document.body.style.overflow = 'hidden';
+      }
 
       document.getElementById('detailLeague').innerText = m.league;
       document.getElementById('detailMinuteBadge').innerText = isMatchLive(m) ? `${m.minute}' CANLI` : m.status;
       document.getElementById('detailHomeTeam').innerText = m.homeTeam;
       document.getElementById('detailAwayTeam').innerText = m.awayTeam;
+      document.getElementById('homeSubsTitle').innerText = `${m.homeTeam} YEDEKLER`;
+      document.getElementById('awaySubsTitle').innerText = `${m.awayTeam} YEDEKLER`;
       document.getElementById('detailHomeScore').innerText = m.homeScore;
       document.getElementById('detailAwayScore').innerText = m.awayScore;
       document.getElementById('detailHtScore').innerText = `İY: ${m.htScore || '-'}`;
@@ -2008,6 +2090,11 @@
       }
 
       renderMatchList();
+    }
+
+    function closeMatchDetail() {
+      document.getElementById('matchDetailPanel')?.classList.remove('mobile-match-detail-open');
+      document.body.style.overflow = '';
     }
 
 
@@ -2832,6 +2919,7 @@
     }
 
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMatchDetail();
       if (e.key === 'Escape') closeNewsModal();
     });
 
@@ -2843,7 +2931,7 @@
       liveItems.forEach(m => {
         const div = document.createElement('div');
         div.className = 'ticker-item bg-zinc-900 border border-mackolik hover:border-yellow-400 rounded px-2.5 py-1 flex items-center gap-2 text-xs cursor-pointer transition';
-        div.onclick = () => { switchMainTab('matches'); selectActiveMatch(m.id); };
+        div.onclick = () => { switchMainTab('matches'); selectActiveMatch(m.id, true); };
         div.innerHTML = `
           <span class="text-red-400 font-mono font-bold text-[10px]">${m.minute}'</span>
           <span class="font-medium text-zinc-200">${m.homeTeam} <b class="text-yellow-400 font-mono">${m.homeScore}-${m.awayScore}</b> ${m.awayTeam}</span>
@@ -3121,6 +3209,7 @@
       } catch (mackErr) {}
 
       if (collectedMatches.length === 0) {
+        closeMatchDetail();
         matchesData = {};
         activeMatchId = null;
         clientScraperPrevious.clear();
@@ -3139,6 +3228,9 @@
         document.getElementById('detailHtScore').innerText = '-';
         document.getElementById('detailStadium').innerText = '-';
         document.getElementById('detailReferee').innerText = '-';
+        document.getElementById('homeSubsTitle').innerText = 'EV SAHİBİ YEDEKLER';
+        document.getElementById('awaySubsTitle').innerText = 'DEPLASMAN YEDEKLER';
+        renderTacticalPitch(null, 'unavailable');
         const badge = document.getElementById('scraperStatusBadge');
         if (badge) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Bugünün verisi bekleniyor';
         return 0;
