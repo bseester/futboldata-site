@@ -172,21 +172,21 @@
       <div class="bg-mackolik-card border border-mackolik rounded-xl p-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
         <div class="flex items-center gap-1 sm:gap-2">
           <button onclick="filterMatches('ALL')" id="filter-ALL" class="filter-pill px-3 py-1 rounded font-black bg-yellow-400 text-black">
-            TÜMÜ (5)
+            TÜMÜ (0)
           </button>
           <button onclick="filterMatches('CANLI')" id="filter-CANLI" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-red-500 mr-1 animate-pulse"></span>
-            CANLI (3)
+            CANLI (0)
           </button>
           <button onclick="filterMatches('FAVORİ')" id="filter-FAVORİ" class="filter-pill px-3 py-1 rounded font-black bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
-            ⭐ FAVORİLER (<span id="count-favs" class="text-yellow-400">1</span>)
+            ⭐ FAVORİLER (<span id="count-favs" class="text-yellow-400">0</span>)
           </button>
         </div>
 
         <div class="text-[11px] text-zinc-400 font-semibold flex items-center gap-2">
           <span class="bg-zinc-900 px-2.5 py-0.5 rounded border border-zinc-800 text-zinc-300">📅 CANLI MAÇLAR</span>
           <span id="scraperStatusBadge" class="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Canlı Veri Aktif
+            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Bugünün maçları yükleniyor…
           </span>
         </div>
       </div>
@@ -206,40 +206,40 @@
             <div class="border-b border-mackolik pb-3">
               <div class="flex items-center justify-between text-xs mb-2">
                 <div class="flex items-center gap-2">
-                  <span id="detailLeague" class="font-black text-yellow-400 uppercase tracking-wide">TÜRKİYE: Trendyol Süper Lig</span>
+                  <span id="detailLeague" class="font-black text-yellow-400 uppercase tracking-wide">Güncel maç bekleniyor</span>
                   <button onclick="switchMatchSubTab('standings')" title="Bu ligin puan durumunu aç" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-yellow-400 hover:text-black text-zinc-300 font-bold text-[10px] border border-zinc-700 transition flex items-center gap-1 shadow-sm">
                     📊 Puan Durumu
                   </button>
                 </div>
-                <span id="detailMinuteBadge" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-black font-mono animate-pulse">74'</span>
+                <span id="detailMinuteBadge" class="bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded font-black font-mono">--</span>
               </div>
 
               <div class="flex items-center justify-between py-2">
                 <div class="w-2/5 text-center">
-                  <div class="text-base sm:text-lg font-black text-white" id="detailHomeTeam">Galatasaray</div>
-                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailHomeCoach" class="text-zinc-200 font-semibold">Okan Buruk</span></div>
-                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailHomeVal">€170.8M</span></div>
+                  <div class="text-base sm:text-lg font-black text-white" id="detailHomeTeam">-</div>
+                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailHomeCoach" class="text-zinc-200 font-semibold">-</span></div>
+                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailHomeVal">-</span></div>
                 </div>
 
                 <div class="w-1/5 text-center">
                   <div class="text-3xl sm:text-4xl font-black font-mono text-yellow-400 tracking-wider flex items-center justify-center gap-1">
-                    <span id="detailHomeScore">2</span>
+                    <span id="detailHomeScore">-</span>
                     <span class="text-zinc-600">:</span>
-                    <span id="detailAwayScore">1</span>
+                    <span id="detailAwayScore">-</span>
                   </div>
-                  <span id="detailHtScore" class="text-[10px] text-zinc-400 uppercase tracking-widest mt-0.5 block font-mono">İY: 1-1</span>
+                  <span id="detailHtScore" class="text-[10px] text-zinc-400 uppercase tracking-widest mt-0.5 block font-mono">-</span>
                 </div>
 
                 <div class="w-2/5 text-center">
-                  <div class="text-base sm:text-lg font-black text-white" id="detailAwayTeam">Fenerbahçe</div>
-                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailAwayCoach" class="text-zinc-200 font-semibold">Jose Mourinho</span></div>
-                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailAwayVal">€138.0M</span></div>
+                  <div class="text-base sm:text-lg font-black text-white" id="detailAwayTeam">-</div>
+                  <div class="text-[10px] text-zinc-400">Teknik: <span id="detailAwayCoach" class="text-zinc-200 font-semibold">-</span></div>
+                  <div class="text-[10px] text-yellow-400 font-bold mt-0.5">Kadro: <span id="detailAwayVal">-</span></div>
                 </div>
               </div>
 
               <div class="text-[11px] text-zinc-400 text-center flex items-center justify-center gap-4 pt-1">
-                <span>🏟️ <span id="detailStadium">RAMS Park</span></span>
-                <span>⚖️ <span id="detailReferee">Atilla Karaoğlan</span></span>
+                <span>🏟️ <span id="detailStadium">-</span></span>
+                <span>⚖️ <span id="detailReferee">-</span></span>
               </div>
             </div>
 
@@ -884,8 +884,7 @@
           return new Set(JSON.parse(saved));
         }
       } catch(e) {}
-      // İlk kez giren kullanıcı için varsayılan favori
-      return new Set(['derby-gs-fb', 'antalya-rize']);
+      return new Set();
     }
 
     let matchesData = {};
@@ -895,7 +894,7 @@
     let currentFilter = 'ALL';
     let soundEnabled = true;
     let chartInstance = null;
-    let activeMatchId = 'derby-gs-fb';
+    let activeMatchId = null;
 
     // ===================================================
     // 📸 TheSportsDB Oyuncu Fotoğraf Önbelleği
@@ -1673,6 +1672,11 @@
     function renderMatchList() {
       const container = document.getElementById('matchListContainer');
       container.innerHTML = '';
+
+      if (Object.keys(matchesData).length === 0) {
+        container.innerHTML = '<div class="rounded-xl border border-zinc-800 bg-mackolik-card p-5 text-center text-sm text-zinc-400">Bugünün maç verisi bekleniyor. Eski maç bilgileri canlı skor olarak gösterilmiyor.</div>';
+        return;
+      }
 
       // 🇹🇷 TÜRK DEVLERİ & ÖZEL MAÇLAR (FENERBAHÇE, GALATASARAY, BEŞİKTAŞ, ANTALYASPOR, TRABZONSPOR)
       const sakipMatches = Object.values(matchesData).filter(m => {
@@ -2920,13 +2924,12 @@
 
       // ─────────────────────────────────────────────────────────────
       // ⭐ MACKOLİK CANLI VERİ — vd.mackolik.com
-      //    Sıra: 1. Doğrudan API  2. Backend proxy  3. corsproxy.io  4. allorigins.win
+      //    Sıra: 1. Backend proxy  2. Doğrudan API  3. corsproxy.io  4. allorigins.win
       // ─────────────────────────────────────────────────────────────
-      const today = new Date();
-      const dd = String(today.getDate()).padStart(2, '0');
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const yyyy = today.getFullYear();
-      const dateStr = `${dd}/${mm}/${yyyy}`;
+      const dateParts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric'
+      }).formatToParts(new Date()).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+      const dateStr = `${dateParts.day}/${dateParts.month}/${dateParts.year}`;
       const directUrl = `https://vd.mackolik.com/livedata?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`;
 
       function parseMackolikRaw(rawArr) {
@@ -2945,26 +2948,26 @@
       try {
         let mackMatches = [];
 
-        // 1. ⚡ Direkt vd.mackolik.com (en hızlı, no proxy)
+        // 1. Backend proxy: GitHub Pages üzerinden güvenilir, CORS'suz kaynak.
         try {
-          const resp = await fetch(directUrl, {
-            headers: { 'Referer': 'https://www.mackolik.com/' },
-            signal: AbortSignal.timeout(5000)
-          });
+          const resp = await fetch(`/api/canli-skorlar?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
           if (resp.ok) {
             const data = await resp.json();
-            const rawArr = data.e || data.m;
-            if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
+            if (Array.isArray(data) && data.length > 0) mackMatches = data;
           }
         } catch(e) {}
 
-        // 2. Backend proxy (/api/canli-skorlar)
+        // 2. Mackolik direct source, if the backend is temporarily unavailable.
         if (mackMatches.length === 0) {
           try {
-            const resp = await fetch('/api/canli-skorlar', { cache: 'no-store' });
+            const resp = await fetch(directUrl, {
+              headers: { 'Referer': 'https://www.mackolik.com/' },
+              signal: AbortSignal.timeout(5000)
+            });
             if (resp.ok) {
               const data = await resp.json();
-              if (Array.isArray(data) && data.length > 0) mackMatches = data;
+              const rawArr = data.e || data.m;
+              if (Array.isArray(rawArr) && rawArr.length > 0) mackMatches = parseMackolikRaw(rawArr);
             }
           } catch(e) {}
         }
@@ -3042,7 +3045,29 @@
         }
       } catch (mackErr) {}
 
-      if (collectedMatches.length === 0) return 0;
+      if (collectedMatches.length === 0) {
+        matchesData = {};
+        activeMatchId = null;
+        clientScraperPrevious.clear();
+        renderMatchList();
+        updateScoreTicker();
+        document.getElementById('detailLeague').innerText = 'Güncel maç bekleniyor';
+        document.getElementById('detailMinuteBadge').innerText = '--';
+        document.getElementById('detailHomeTeam').innerText = '-';
+        document.getElementById('detailAwayTeam').innerText = '-';
+        document.getElementById('detailHomeScore').innerText = '-';
+        document.getElementById('detailAwayScore').innerText = '-';
+        document.getElementById('detailHomeCoach').innerText = '-';
+        document.getElementById('detailAwayCoach').innerText = '-';
+        document.getElementById('detailHomeVal').innerText = '-';
+        document.getElementById('detailAwayVal').innerText = '-';
+        document.getElementById('detailHtScore').innerText = '-';
+        document.getElementById('detailStadium').innerText = '-';
+        document.getElementById('detailReferee').innerText = '-';
+        const badge = document.getElementById('scraperStatusBadge');
+        if (badge) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Bugünün verisi bekleniyor';
+        return 0;
+      }
 
       // ─────────────────────────────────────────────────────────────
       // F) SADECE SCRAPER: Tüm maçları canlı ağdan gelenlerle yenile
@@ -3077,7 +3102,8 @@
       const totalCount = Object.keys(matchesData).length;
       const badge = document.getElementById('scraperStatusBadge');
       if (badge) {
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Scraper: ${liveCount} Canlı / ${totalCount} Toplam Maç`;
+        const updatedAt = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' }).format(new Date());
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Bugün · ${liveCount} canlı / ${totalCount} maç · ${updatedAt}`;
       }
 
       renderMatchList();
