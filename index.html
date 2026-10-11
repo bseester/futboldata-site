@@ -1972,10 +1972,14 @@
           if (mkLineups) {
             if (matchesData[matchId]) {
               matchesData[matchId].lineups = mkLineups;
+              matchesData[matchId].homeManager = mkLineups.home?.manager || matchesData[matchId].homeManager;
+              matchesData[matchId].awayManager = mkLineups.away?.manager || matchesData[matchId].awayManager;
             }
             if (activeMatchId === matchId) {
               prefetchLineupPhotos(mkLineups);
               renderTacticalPitch(mkLineups);
+              document.getElementById('detailHomeCoach').innerText = mkLineups.home?.manager || 'Teknik Direktör';
+              document.getElementById('detailAwayCoach').innerText = mkLineups.away?.manager || 'Teknik Direktör';
               if (lineupsTab) lineupsTab.innerHTML = `🟢 ${mkLineups.source || 'RESMÎ'} KADRO`;
             }
           } else if (activeMatchId === matchId) {
