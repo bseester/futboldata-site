@@ -46,64 +46,49 @@
       animation: goalFlash 3s ease-out;
     }
 
-    @media (max-width: 640px) {
-      html { scroll-padding-top: 12px; }
-      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); overflow-x: hidden; }
-      .site-header-top {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 10px;
-        height: auto !important;
-        padding: 10px 12px 12px;
-      }
-      .brand-controls { width: 100%; justify-content: space-between; gap: 8px; }
-      .brand-controls > a { min-width: 0; }
-      .brand-title { font-size: 18px; }
-      .brand-subtitle { display: none; }
-      .sound-control { min-height: 40px; min-width: 42px; justify-content: center; padding: 0 10px; }
-      .sound-control #soundText { display: none; }
-      .header-search { width: 100% !important; }
-      .header-search input { min-height: 42px; font-size: 14px; }
-      .header-primary-nav {
-        position: fixed;
-        inset: auto 0 0;
-        z-index: 100;
-        display: flex !important;
-        gap: 4px !important;
-        padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
-        background: rgba(18, 23, 32, .97);
-        border-top: 1px solid #2a364a;
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, .35);
-        backdrop-filter: blur(16px);
-      }
-      .main-nav-btn {
-        flex: 1 1 0;
-        min-width: 0;
-        min-height: 48px;
-        padding: 6px 2px !important;
-        border-radius: 10px !important;
-        font-size: 10px !important;
-        line-height: 1.15;
-        white-space: nowrap;
-      }
-      .score-ticker-wrap { min-height: 38px; padding-top: 7px; padding-bottom: 7px; }
-      #breakingNewsContainer { min-height: 42px; padding: 7px 9px; }
+    .mobile-tab-link { -webkit-tap-highlight-color: transparent; }
+    .mobile-tab-link.active { color: #facc15; }
+
+    @media (max-width: 767px) {
+      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); background: #090d12; }
+      header { box-shadow: 0 8px 28px rgba(0,0,0,.34); }
+      .app-header-main { height: 58px !important; gap: 8px; }
+      .app-brand { gap: 8px !important; }
+      .app-brand-mark { width: 34px !important; height: 34px !important; }
+      .app-brand-name { font-size: 18px !important; }
+      .app-brand-tagline { display: none; }
+      .desktop-main-nav { display: none !important; }
+      .app-search { width: 38% !important; }
+      .app-search input { height: 36px; padding-left: 31px; font-size: 12px; }
+      .app-search input::placeholder { color: transparent; }
+      .app-search::before { content: '⌕ Ara'; position: absolute; z-index: 1; left: 10px; top: 8px; color: #a1a1aa; font-size: 12px; pointer-events: none; }
+      .app-search:focus-within::before { display: none; }
+      #soundBtn { width: 34px; height: 34px; padding: 0 !important; justify-content: center; flex-shrink: 0; }
+      #soundText { font-size: 0; }
+      #soundText::first-letter { font-size: 15px; }
+      #scoreTickerBar { gap: 7px; }
+      #scoreTickerBar > div:first-child { font-size: 9px; margin-right: 0; }
+      #breakingNewsContainer { padding-top: 7px; padding-bottom: 7px; }
       #breakingNewsContainer > div { gap: 8px; }
-      #breakingNewsContainer a { font-size: 11px; }
-      main { padding: 12px 10px !important; }
+      #breakingNewsContainer > div > div:first-child { padding-left: 7px; padding-right: 7px; }
+      main { padding: 12px 10px 24px !important; }
       #tab-matches, #tab-news, #tab-transfers, #tab-fixtures { gap: 12px; }
-      #tab-matches > .bg-mackolik-card:first-child { align-items: stretch; padding: 9px; }
-      #tab-matches > .bg-mackolik-card:first-child > div:first-child { width: 100%; justify-content: space-between; }
-      .filter-pill { min-height: 40px; padding: 8px 9px; font-size: 10px; }
-      #scraperStatusBadge { max-width: 100%; }
-      #matchListContainer .bg-mackolik-card { border-radius: 12px; }
-      #matchListContainer .bg-mackolik-row { min-height: 66px; padding: 9px 8px; }
-      #tab-matches [class~=\"lg:col-span-7\"] > .bg-mackolik-card { padding: 12px; }
-      #tab-matches [class~=\"lg:col-span-7\"] [class*=\"text-3xl\"] { font-size: 1.65rem; }
-      #tab-fixtures table { min-width: 520px; }
-      #tab-fixtures .overflow-x-auto { -webkit-overflow-scrolling: touch; }
-      #tab-fixtures input, #standingsSearchInput { min-height: 44px; font-size: 14px; }
-      button, a, input, select { touch-action: manipulation; }
+      #matchListContainer > div { border-radius: 16px; }
+      #mobileBottomNav {
+        position: fixed; inset: auto 0 0; z-index: 70;
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding: 7px 7px calc(7px + env(safe-area-inset-bottom));
+        background: rgba(15, 20, 28, .94); border-top: 1px solid #293344;
+        box-shadow: 0 -10px 28px rgba(0,0,0,.38); backdrop-filter: blur(18px);
+      }
+      .mobile-tab-link { min-height: 52px; border-radius: 13px; color: #9ca3af; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 800; }
+      .mobile-tab-link .mobile-tab-icon { font-size: 19px; line-height: 1; }
+      .mobile-tab-link.active { background: rgba(250,204,21,.11); color: #facc15; }
+      .mobile-tab-link:active { transform: scale(.96); }
+    }
+
+    @media (min-width: 768px) {
+      #mobileBottomNav { display: none; }
     }
   </style>
 </head>
@@ -136,46 +121,46 @@
   <!-- 1. HEADER (LOGO, MENÜ & KONTROLLER)                      -->
   <!-- ======================================================== -->
   <header class="bg-mackolik-header border-b border-mackolik sticky top-0 z-50 shadow-2xl">
-    <div class="site-header-top max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14">
+    <div class="app-header-main max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14">
       
       <!-- Logo & Butonlar -->
-      <div class="brand-controls flex items-center gap-3">
-        <a href="#" onclick="switchMainTab('matches')" class="flex items-center gap-2 group">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-500 flex items-center justify-center font-black text-black text-lg shadow-md group-hover:scale-105 transition">
+      <div class="flex items-center gap-3">
+        <a href="#" onclick="switchMainTab('matches')" class="app-brand flex items-center gap-2 group">
+          <div class="app-brand-mark w-8 h-8 rounded-lg bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-500 flex items-center justify-center font-black text-black text-lg shadow-md group-hover:scale-105 transition">
             ⚽
           </div>
           <div class="flex flex-col">
-            <span class="brand-title text-xl sm:text-2xl font-black tracking-tighter leading-none">
+            <span class="app-brand-name text-xl sm:text-2xl font-black tracking-tighter leading-none">
               <span class="text-white">SAKIP</span><span class="text-mackolik-yellow">KOLİK</span>
             </span>
-            <span class="brand-subtitle text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Canlı Skor & Transfer Portalı</span>
+            <span class="app-brand-tagline text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Canlı Skor & Transfer Portalı</span>
           </div>
         </a>
 
         <!-- Ses Düdük Bildirimi -->
-        <button onclick="toggleSound()" id="soundBtn" aria-label="Ses bildirimini aç veya kapat" title="Ses bildirimini aç veya kapat" class="sound-control flex items-center gap-1 text-[11px] bg-zinc-800/90 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 border border-zinc-700 transition">
-          <span id="soundIcon" aria-hidden="true">🔔</span><span id="soundText">Düdük: Açık</span>
+        <button onclick="toggleSound()" id="soundBtn" class="flex items-center gap-1 text-[11px] bg-zinc-800/90 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 border border-zinc-700 transition">
+          <span id="soundText">🔔 Düdük: Açık</span>
         </button>
       </div>
 
       <!-- Menü Sekmeleri -->
-      <nav class="header-primary-nav flex items-center gap-1 sm:gap-2" aria-label="Ana menü">
+      <nav class="desktop-main-nav flex items-center gap-1 sm:gap-2">
         <button onclick="switchMainTab('matches')" id="nav-btn-matches" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition">
-          CANLI <span class="hidden sm:inline">SKOR</span>
+          CANLI SKOR
         </button>
         <button onclick="switchMainTab('news')" id="nav-btn-news" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          HABER<span class="hidden sm:inline">LER</span>
+          HABERLER
         </button>
         <button onclick="switchMainTab('transfers')" id="nav-btn-transfers" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          TRANSFER<span class="hidden sm:inline">LER</span>
+          TRANSFERLER
         </button>
         <button onclick="switchMainTab('fixtures')" id="nav-btn-fixtures" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          PUAN<span class="hidden sm:inline"> DURUMU</span>
+          PUAN DURUMU
         </button>
       </nav>
 
       <!-- Arama Kutusu -->
-      <div class="header-search relative w-40 sm:w-64">
+      <div class="app-search relative w-40 sm:w-64">
         <input 
           id="globalSearchInput"
           type="text" 
@@ -217,6 +202,21 @@
       </div>
     </div>
   </header>
+
+  <nav id="mobileBottomNav" aria-label="Alt gezinme">
+    <button type="button" class="mobile-tab-link active" data-mobile-tab="matches" onclick="switchMainTab('matches')" aria-label="Canlı skor">
+      <span class="mobile-tab-icon">⚽</span><span>Skor</span>
+    </button>
+    <button type="button" class="mobile-tab-link" data-mobile-tab="news" onclick="switchMainTab('news')" aria-label="Haberler">
+      <span class="mobile-tab-icon">📰</span><span>Haber</span>
+    </button>
+    <button type="button" class="mobile-tab-link" data-mobile-tab="transfers" onclick="switchMainTab('transfers')" aria-label="Transferler">
+      <span class="mobile-tab-icon">⇄</span><span>Transfer</span>
+    </button>
+    <button type="button" class="mobile-tab-link" data-mobile-tab="fixtures" onclick="switchMainTab('fixtures')" aria-label="Puan durumu">
+      <span class="mobile-tab-icon">🏆</span><span>Puan</span>
+    </button>
+  </nav>
 
   <!-- ======================================================== -->
   <!-- 2. ANA İÇERİK                                             -->
