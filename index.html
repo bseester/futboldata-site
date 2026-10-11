@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Sakıpkolik - Canlı Skor, Fotoğraflı Grafikli Kadrolar, Transferler & Haberler</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -45,6 +45,66 @@
     .flash-goal {
       animation: goalFlash 3s ease-out;
     }
+
+    @media (max-width: 640px) {
+      html { scroll-padding-top: 12px; }
+      body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); overflow-x: hidden; }
+      .site-header-top {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        height: auto !important;
+        padding: 10px 12px 12px;
+      }
+      .brand-controls { width: 100%; justify-content: space-between; gap: 8px; }
+      .brand-controls > a { min-width: 0; }
+      .brand-title { font-size: 18px; }
+      .brand-subtitle { display: none; }
+      .sound-control { min-height: 40px; min-width: 42px; justify-content: center; padding: 0 10px; }
+      .sound-control #soundText { display: none; }
+      .header-search { width: 100% !important; }
+      .header-search input { min-height: 42px; font-size: 14px; }
+      .header-primary-nav {
+        position: fixed;
+        inset: auto 0 0;
+        z-index: 100;
+        display: flex !important;
+        gap: 4px !important;
+        padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+        background: rgba(18, 23, 32, .97);
+        border-top: 1px solid #2a364a;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, .35);
+        backdrop-filter: blur(16px);
+      }
+      .main-nav-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 48px;
+        padding: 6px 2px !important;
+        border-radius: 10px !important;
+        font-size: 10px !important;
+        line-height: 1.15;
+        white-space: nowrap;
+      }
+      .score-ticker-wrap { min-height: 38px; padding-top: 7px; padding-bottom: 7px; }
+      #breakingNewsContainer { min-height: 42px; padding: 7px 9px; }
+      #breakingNewsContainer > div { gap: 8px; }
+      #breakingNewsContainer a { font-size: 11px; }
+      main { padding: 12px 10px !important; }
+      #tab-matches, #tab-news, #tab-transfers, #tab-fixtures { gap: 12px; }
+      #tab-matches > .bg-mackolik-card:first-child { align-items: stretch; padding: 9px; }
+      #tab-matches > .bg-mackolik-card:first-child > div:first-child { width: 100%; justify-content: space-between; }
+      .filter-pill { min-height: 40px; padding: 8px 9px; font-size: 10px; }
+      #scraperStatusBadge { max-width: 100%; }
+      #matchListContainer .bg-mackolik-card { border-radius: 12px; }
+      #matchListContainer .bg-mackolik-row { min-height: 66px; padding: 9px 8px; }
+      #tab-matches [class~=\"lg:col-span-7\"] > .bg-mackolik-card { padding: 12px; }
+      #tab-matches [class~=\"lg:col-span-7\"] [class*=\"text-3xl\"] { font-size: 1.65rem; }
+      #tab-fixtures table { min-width: 520px; }
+      #tab-fixtures .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+      #tab-fixtures input, #standingsSearchInput { min-height: 44px; font-size: 14px; }
+      button, a, input, select { touch-action: manipulation; }
+    }
   </style>
 </head>
 <body class="min-h-screen selection:bg-yellow-400 selection:text-black">
@@ -76,46 +136,46 @@
   <!-- 1. HEADER (LOGO, MENÜ & KONTROLLER)                      -->
   <!-- ======================================================== -->
   <header class="bg-mackolik-header border-b border-mackolik sticky top-0 z-50 shadow-2xl">
-    <div class="max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14">
+    <div class="site-header-top max-w-7xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14">
       
       <!-- Logo & Butonlar -->
-      <div class="flex items-center gap-3">
+      <div class="brand-controls flex items-center gap-3">
         <a href="#" onclick="switchMainTab('matches')" class="flex items-center gap-2 group">
           <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-yellow-400 via-amber-500 to-red-500 flex items-center justify-center font-black text-black text-lg shadow-md group-hover:scale-105 transition">
             ⚽
           </div>
           <div class="flex flex-col">
-            <span class="text-xl sm:text-2xl font-black tracking-tighter leading-none">
+            <span class="brand-title text-xl sm:text-2xl font-black tracking-tighter leading-none">
               <span class="text-white">SAKIP</span><span class="text-mackolik-yellow">KOLİK</span>
             </span>
-            <span class="text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Canlı Skor & Transfer Portalı</span>
+            <span class="brand-subtitle text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Canlı Skor & Transfer Portalı</span>
           </div>
         </a>
 
         <!-- Ses Düdük Bildirimi -->
-        <button onclick="toggleSound()" id="soundBtn" class="flex items-center gap-1 text-[11px] bg-zinc-800/90 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 border border-zinc-700 transition">
-          <span id="soundText">🔔 Düdük: Açık</span>
+        <button onclick="toggleSound()" id="soundBtn" aria-label="Ses bildirimini aç veya kapat" title="Ses bildirimini aç veya kapat" class="sound-control flex items-center gap-1 text-[11px] bg-zinc-800/90 hover:bg-zinc-700 px-2 py-1 rounded text-zinc-300 border border-zinc-700 transition">
+          <span id="soundIcon" aria-hidden="true">🔔</span><span id="soundText">Düdük: Açık</span>
         </button>
       </div>
 
       <!-- Menü Sekmeleri -->
-      <nav class="flex items-center gap-1 sm:gap-2">
+      <nav class="header-primary-nav flex items-center gap-1 sm:gap-2" aria-label="Ana menü">
         <button onclick="switchMainTab('matches')" id="nav-btn-matches" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition">
-          CANLI SKOR
+          CANLI <span class="hidden sm:inline">SKOR</span>
         </button>
         <button onclick="switchMainTab('news')" id="nav-btn-news" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          HABERLER
+          HABER<span class="hidden sm:inline">LER</span>
         </button>
         <button onclick="switchMainTab('transfers')" id="nav-btn-transfers" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          TRANSFERLER
+          TRANSFER<span class="hidden sm:inline">LER</span>
         </button>
         <button onclick="switchMainTab('fixtures')" id="nav-btn-fixtures" class="main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition">
-          PUAN DURUMU
+          PUAN<span class="hidden sm:inline"> DURUMU</span>
         </button>
       </nav>
 
       <!-- Arama Kutusu -->
-      <div class="relative w-40 sm:w-64">
+      <div class="header-search relative w-40 sm:w-64">
         <input 
           id="globalSearchInput"
           type="text" 
@@ -129,7 +189,7 @@
     </div>
 
     <!-- 2. STICKY CANLI SKOR BANDI (TICKER) -->
-    <div class="bg-mackolik-sub border-t border-mackolik px-3 py-1.5 overflow-x-auto scrollbar-none">
+    <div class="score-ticker-wrap bg-mackolik-sub border-t border-mackolik px-3 py-1.5 overflow-x-auto scrollbar-none">
       <div id="scoreTickerBar" class="max-w-7xl mx-auto flex items-center gap-2 min-w-max">
         <div class="flex items-center gap-1 text-[11px] font-black text-red-500 mr-2 uppercase tracking-wide">
           <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> CANLI MAÇLAR
@@ -945,7 +1005,8 @@
     // Ses Bildirimi
     function toggleSound() {
       soundEnabled = !soundEnabled;
-      document.getElementById('soundText').innerText = soundEnabled ? '🔔 Düdük: Açık' : '🔕 Düdük: Kapalı';
+      document.getElementById('soundText').innerText = soundEnabled ? 'Düdük: Açık' : 'Düdük: Kapalı';
+      document.getElementById('soundIcon').innerText = soundEnabled ? '🔔' : '🔕';
       document.getElementById('soundBtn').classList.toggle('text-yellow-400', soundEnabled);
     }
 
@@ -976,13 +1037,14 @@
       });
 
       document.querySelectorAll('.main-nav-btn').forEach(b => {
-        b.className = 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition';
+        const isActive = b.id === `nav-btn-${t}`;
+        b.className = isActive
+          ? 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition'
+          : 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md text-zinc-300 hover:text-white hover:bg-zinc-800 transition';
       });
 
       const tabEl = document.getElementById(`tab-${t}`);
       if (tabEl) tabEl.classList.remove('hidden');
-      const btnEl = document.getElementById(`nav-btn-${t}`);
-      if (btnEl) btnEl.className = 'main-nav-btn px-3 py-1.5 text-xs sm:text-sm font-black rounded-md bg-yellow-400 text-black shadow transition';
 
       if (t === 'transfers') {
         loadTransfersHub();
