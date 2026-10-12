@@ -657,6 +657,7 @@
                 <span id="photoSourceBadge" class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono inline-block mt-1.5">
                   TheSportsDB Canlı API
                 </span>
+                <a id="mackolikProfileLink" class="hidden text-[9px] text-yellow-400 underline mt-1.5 block" target="_blank" rel="noreferrer">Mackolik oyuncu sayfasını aç ↗</a>
               </div>
             </div>
 
@@ -681,8 +682,9 @@
               <h3 class="text-sm font-black text-white uppercase tracking-wider">📈 Tarihsel Piyasa Değeri Gelişimi</h3>
               <p class="text-xs text-zinc-500 mb-4">Transfermarkt resmi değerleme tarihlerine göre oyuncunun kulüp bazlı değer artış grafiği</p>
             </div>
-            <div class="h-64 w-full">
+            <div class="h-64 w-full relative">
               <canvas id="transChartCanvas"></canvas>
+              <div id="noValuationHistory" class="hidden absolute inset-0 flex items-center justify-center text-xs text-zinc-500 pointer-events-none">Mackolik bu oyuncu için piyasa değeri geçmişi sunmuyor.</div>
             </div>
           </div>
         </div>
@@ -897,6 +899,14 @@
   <!-- 5. JAVASCRIPT ETKİLEŞİM & SSE                            -->
   <!-- ======================================================== -->
   <script>
+    // Local file and hosted site API routing.
+    const SAKIPKOLIK_API_BASE_URL = String(window.SAKIPKOLIK_API_BASE_URL ||
+      (location.protocol === 'file:' ? 'http://localhost:4001' : '')).replace(/\/$/, '');
+    function apiFetch(path, options) {
+      const target = /^https?:\/\//i.test(path) ? path : `${SAKIPKOLIK_API_BASE_URL}${path}`;
+      return fetch(target, options);
+    }
+
     // 🛑 SİTEYİ TEK BUTONLA KAPATMA / BAKIM MODU (SUNUCU API'Sİ İLE SENKRONİZE)
     let isSiteShutdown = false;
     let siteShutdownMessage = 'Sakıpbey çalısmadayız';
@@ -929,7 +939,7 @@
 
     async function fetchServerSiteStatus() {
       try {
-        const resp = await fetch('/api/site-status?_=' + Date.now(), { cache: 'no-store' });
+        const resp = await apiFetch('/api/site-status?_=' + Date.now(), { cache: 'no-store' });
         if (resp.ok) {
           const data = await resp.json();
           isSiteShutdown = !!data.isClosed;
@@ -1152,7 +1162,7 @@
       if (standingsBody) standingsBody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-zinc-500 font-sans text-xs">Puan durumu yükleniyor...</td></tr>';
 
       try {
-        const res = await fetch(`/api/standings?league=${league}`);
+        const res = await apiFetch(`/api/standings?league=${league}`);
         const json = await res.json();
         const standings = Array.isArray(json.standings) ? json.standings : (Array.isArray(json.data) ? json.data : []);
         if (json.success && standings.length > 0) {
@@ -1161,7 +1171,7 @@
         }
 
         // Fallback: /api/fixtures üzerinden al
-        const fRes = await fetch('/api/fixtures');
+        const fRes = await apiFetch('/api/fixtures');
         const fJson = await fRes.json();
         if (fJson.success && fJson.standings && fJson.standings.length > 0) {
           renderStandingsTable(fJson.standings);
@@ -1946,7 +1956,7 @@
           timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit'
         }).format(new Date());
         const dateParam = encodeURIComponent(matchDate);
-        const resp = await fetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}&date=${dateParam}`, { cache: 'no-store' });
+        const resp = await apiFetch(`/api/lineups/mackolik/${encodeURIComponent(matchId)}?home=${homeParam}&away=${awayParam}&date=${dateParam}`, { cache: 'no-store' });
         const data = resp.ok ? await resp.json() : null;
         // Only accept lineups explicitly marked as verified by a provider.
         // The previous backend returned a hard-coded squad as if it were official.
@@ -2137,14 +2147,14 @@
       // Yedekler
       document.getElementById('homeSubsList').innerHTML = (lineups.home.subs || []).map(s => `
         <div class="flex justify-between py-0.5 border-b border-zinc-800">
-          <span>#${s.number} ${s.name} (${s.pos})</span>
+          <button type="button" onclick="openTransferPlayerProfile('${playerProfileSlug(s.name)}')" class="text-left hover:text-yellow-400">#${s.number} ${s.name} (${s.pos})</button>
           <span class="text-yellow-400 font-bold">${s.value || ''}</span>
         </div>
       `).join('');
 
       document.getElementById('awaySubsList').innerHTML = (lineups.away.subs || []).map(s => `
         <div class="flex justify-between py-0.5 border-b border-zinc-800">
-          <span>#${s.number} ${s.name} (${s.pos})</span>
+          <button type="button" onclick="openTransferPlayerProfile('${playerProfileSlug(s.name)}')" class="text-left hover:text-yellow-400">#${s.number} ${s.name} (${s.pos})</button>
           <span class="text-blue-400 font-bold">${s.value || ''}</span>
         </div>
       `).join('');
@@ -2159,10 +2169,8 @@
 
       div.onclick = (e) => {
         e.stopPropagation();
-        if (p.slug) {
-          switchMainTab('transfers');
-          loadPlayerProfile(p.slug);
-        }
+        switchMainTab('transfers');
+        loadPlayerProfile(p.slug || playerProfileSlug(p.name));
       };
 
       // Önce önbellekteki fotoğrafı kullan, yoksa statik fallback
@@ -2312,7 +2320,7 @@
 
     async function loadTransfersHub() {
       try {
-        const res = await fetch('/api/transfers');
+        const res = await apiFetch('/api/transfers');
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.message || `HTTP ${res.status}`);
         if (json.success && json.data) {
@@ -2404,9 +2412,9 @@
                   <img src="${d.photo || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=100'" />
                 </div>
                 <div>
-                  <h4 class="font-black text-white text-sm group-hover:text-yellow-400 transition cursor-pointer" onclick="switchTransferSubTab('player'); loadPlayerProfile('${d.player.toLowerCase().replace(/\\s+/g, '-')}')">
+                  <button type="button" class="font-black text-white text-sm group-hover:text-yellow-400 transition cursor-pointer text-left" onclick="openTransferPlayerProfile('${playerProfileSlug(d.player)}')">
                     ${d.player}
-                  </h4>
+                  </button>
                   <div class="text-[11px] text-zinc-400 flex items-center gap-2 mt-0.5">
                     <span>${d.pos}</span>
                     <span>•</span>
@@ -2526,7 +2534,7 @@
               ${p.rank}
             </span>
           </td>
-          <td class="py-3 px-4 font-bold text-white text-xs whitespace-nowrap cursor-pointer hover:text-yellow-400 transition" onclick="switchTransferSubTab('player'); loadPlayerProfile('${p.name.toLowerCase().replace(/\\s+/g, '-')}')">
+          <td class="py-3 px-4 font-bold text-white text-xs whitespace-nowrap cursor-pointer hover:text-yellow-400 transition" onclick="openTransferPlayerProfile('${playerProfileSlug(p.name)}')">
             ${p.name}
           </td>
           <td class="py-3 px-3 text-zinc-300 text-xs whitespace-nowrap">
@@ -2562,18 +2570,40 @@
       renderTopValuedPlayers(filteredTop);
     }
 
+    function playerProfileSlug(value = '') {
+      return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[ıİ]/g, 'i').toLocaleLowerCase('en')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function openTransferPlayerProfile(slug) {
+      switchTransferSubTab('player');
+      loadPlayerProfile(slug);
+    }
+
     // OYUNCU DETAYI VE İLGİLİ HABERLERİ YÜKLE
     async function loadPlayerProfile(slug) {
       try {
-        const res = await fetch(`/api/players/${slug}`);
-        const { data } = await res.json();
+        const res = await apiFetch(`/api/players/${encodeURIComponent(slug)}`);
+        const payload = await res.json();
+        if (!res.ok || !payload.success || !payload.data) throw new Error(payload.message || 'Oyuncu profili bulunamadı');
+        const { data } = payload;
         
         document.getElementById('transBioName').innerText = data.fullName;
         document.getElementById('transBioClub').innerText = data.currentClub;
-        document.getElementById('transBioPos').innerText = data.primaryPosition;
-        document.getElementById('transBioNat').innerText = data.nationality + ' • ' + (data.birthDate || '');
-        document.getElementById('transBioValue').innerText = '€' + (data.currentMarketValueEur / 1000000).toFixed(1) + 'M';
-        document.getElementById('transBioContract').innerText = data.contractUntil;
+        document.getElementById('transBioPos').innerText = `${data.primaryPosition || '—'}${data.jerseyNumber ? ` • #${data.jerseyNumber}` : ''}`;
+        document.getElementById('transBioNat').innerText = [data.nationality, data.birthDate].filter(Boolean).join(' • ') || 'Mackolik oyuncu kaydı';
+        document.getElementById('transBioValue').innerText = data.currentMarketValueEur == null ? '—' : '€' + (data.currentMarketValueEur / 1000000).toFixed(1) + 'M';
+        document.getElementById('transBioContract').innerText = data.contractUntil || '—';
+        const sourceBadge = document.getElementById('photoSourceBadge');
+        if (sourceBadge) sourceBadge.innerText = data.source === 'Mackolik' ? 'MACKOLİK OYUNCU VERİSİ' : `${data.source || 'OYUNCU'} VERİSİ`;
+        const profileLink = document.getElementById('mackolikProfileLink');
+        if (profileLink) {
+          if (data.mackolikProfileUrl) {
+            profileLink.href = data.mackolikProfileUrl;
+            profileLink.classList.remove('hidden');
+          } else profileLink.classList.add('hidden');
+        }
 
         // Önce statik fotoğrafı göster
         const photoEl = document.getElementById('transBioPhoto');
@@ -2589,15 +2619,16 @@
         });
 
         // Transferler
-        document.getElementById('transBioList').innerHTML = data.transfers.map(t => `
+        const playerTransfers = data.transfers || [];
+        document.getElementById('transBioList').innerHTML = playerTransfers.length ? playerTransfers.map(t => `
           <div class="flex justify-between py-1 border-b border-mackolik text-[11px]">
             <span>${t.season} | ${t.from} ➔ ${t.to}</span>
             <span class="font-bold text-yellow-400">${t.fee}</span>
           </div>
-        `).join('');
+        `).join('') : '<div class="text-[11px] text-zinc-500">Bu oyuncu için henüz transfer kaydı yok.</div>';
 
         // Piyasa Değeri Grafiği
-        renderTransferChart(data.valuationHistory);
+        renderTransferChart(data.valuationHistory || []);
 
         // OYUNCUYLA İLGİLİ HABERLER
         const newsContainer = document.getElementById('playerRelatedNewsGrid');
@@ -2628,8 +2659,9 @@
 
     function renderTransferChart(history) {
       const ctx = document.getElementById('transChartCanvas').getContext('2d');
-      const labels = history.map(h => h.date);
-      const values = history.map(h => h.value / 1000000);
+      const usableHistory = (history || []).filter(h => Number.isFinite(Number(h.value)) && Number(h.value) > 0);
+      const labels = usableHistory.map(h => h.date);
+      const values = usableHistory.map(h => h.value / 1000000);
 
       if (chartInstance) chartInstance.destroy();
 
@@ -2658,6 +2690,8 @@
           }
         }
       });
+      const note = document.getElementById('noValuationHistory');
+      if (note) note.classList.toggle('hidden', usableHistory.length > 0);
     }
 
 
@@ -2746,7 +2780,7 @@
         newsData = fetchedArticles;
         console.log(`✅ [RSS] ${newsData.length} canlı haber başarıyla çekildi!`);
         // Sunucu önbelleğine de gönder
-        fetch('/api/sync-rss-news', {
+        apiFetch('/api/sync-rss-news', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items: newsData })
@@ -2754,7 +2788,7 @@
       } else {
         // Fallback: sunucu API'sini dene
         try {
-          const res = await fetch('/api/news');
+          const res = await apiFetch('/api/news');
           const json = await res.json();
           newsData = json.data || [];
         } catch(e) {}
@@ -2949,7 +2983,7 @@
     }
 
     function connectLiveScoreSSE() {
-      const evt = new EventSource('/api/live/stream');
+      const evt = new EventSource(`${SAKIPKOLIK_API_BASE_URL}/api/live/stream`);
 
       evt.addEventListener('init', (e) => {
         // SSE init verisi artık kullanılmıyor — Mackolik tek kaynak
@@ -3129,7 +3163,7 @@
 
         // 1. Backend proxy: GitHub Pages üzerinden güvenilir, CORS'suz kaynak.
         try {
-          const resp = await fetch(`/api/canli-skorlar?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+          const resp = await apiFetch(`/api/canli-skorlar?date=${encodeURIComponent(dateStr)}&_=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
           if (resp.ok) {
             const data = await resp.json();
             if (Array.isArray(data) && data.length > 0) mackMatches = data;
@@ -3363,7 +3397,7 @@
       const box = document.getElementById('searchDropdown');
       if (!q || q.length < 2) { box.classList.add('hidden'); return; }
 
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const res = await apiFetch(`/api/search?q=${encodeURIComponent(q)}`);
       const { results } = await res.json();
       if (!results || results.length === 0) {
         box.innerHTML = '<div class="p-3 text-xs text-zinc-500">Sonuç bulunamadı</div>';
@@ -3402,7 +3436,7 @@
 
     async function loadInitialBreakingNews() {
       try {
-        const res = await fetch('/api/breaking-news');
+        const res = await apiFetch('/api/breaking-news');
         const json = await res.json();
         if (json.success && json.data && json.data.length > 0) {
           displayBreakingNews(json.data[0]);
